@@ -691,14 +691,19 @@
 
             const findCol = (names) => names.find(n => cols.includes(n));
 
+            // Load any manually-saved column mapping from Settings, so it survives refresh/redeploy.
+            let saved = {};
+            try { saved = JSON.parse(localStorage.getItem('re_colmap') || '{}'); } catch (e) {}
+            const pick = (key, names) => (saved[key] && cols.includes(saved[key])) ? saved[key] : findCol(names);
+
             COL_MAP = {
-                date: findCol(['Date', 'date', 'Date Raised', 'Raised Date', 'Created']),
-                consignment: findCol(['Consignment', 'consignment', 'CN', 'CN No', 'Tracking']),
-                details: findCol(['Issue Details', 'Issue', 'Details', 'Problem', 'Description']),
-                category: findCol(['Category', 'category', 'Issue Type', 'Type']),
-                status: findCol(['Status', 'status', 'State']),
-                kam: findCol(['KAM', 'kam', 'Member', 'member', 'Assignee', 'Assign To', 'Email', 'email', 'Assigned To']),
-                solved: findCol(['Slove date', 'Solved Date', 'Resolved Date', 'Closed Date', 'Date Solved']),
+                date: pick('date', ['Date', 'date', 'Date Raised', 'Raised Date', 'Created']),
+                consignment: pick('consignment', ['Consignment', 'consignment', 'CN', 'CN No', 'Tracking']),
+                details: pick('details', ['Issue Details', 'Issue', 'Details', 'Problem', 'Description']),
+                category: pick('category', ['Category', 'category', 'Issue Type', 'Type']),
+                status: pick('status', ['Status', 'status', 'State']),
+                kam: pick('kam', ['KAM', 'kam', 'Member', 'member', 'Assignee', 'Assign To', 'Email', 'email', 'Assigned To']),
+                solved: pick('solved', ['Slove date', 'Solved Date', 'Resolved Date', 'Closed Date', 'Date Solved']),
                 sheet: '_sheet'
             };
 
