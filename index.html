@@ -584,13 +584,13 @@
 
         // ===================== CONFIG =====================
         const TEAM_MEMBERS = [
-            { name: 'Rudra', key: 'rudra', initials: 'RU', color: '#3b82f6' },
-            { name: 'Rizvi', key: 'rizvi', initials: 'RZ', color: '#ef4444' },
-            { name: 'Sohel', key: 'sohel', initials: 'SH', color: '#10b981' },
-            { name: 'Hasib', key: 'hasib', initials: 'HS', color: '#f97316' },
-            { name: 'Jubayer', key: 'jubayer', initials: 'JU', color: '#8b5cf6' },
-            { name: 'Rahul', key: 'rahul', initials: 'RH', color: '#06b6d4' },
-            { name: 'Abdul', key: 'abdul', initials: 'AB', color: '#ec4899' }
+            { name: 'Raian Islam Rudra', key: 'rudra', initials: 'RU', color: '#3b82f6', id: 'CL-86045', designation: 'Senior Executive' },
+            { name: 'Rizvi Ahmed Chowdhury', key: 'rizvi', initials: 'RZ', color: '#ef4444', id: 'CL-84119', designation: 'Associate' },
+            { name: 'MD Sohel Rana', key: 'sohel', initials: 'SH', color: '#10b981', id: 'CL-86023', designation: 'Executive' },
+            { name: 'Hasib Islam', key: 'hasib', initials: 'HS', color: '#f97316', id: 'CL-86024', designation: 'Executive' },
+            { name: 'Jubayer Rahman', key: 'jubayer', initials: 'JU', color: '#8b5cf6', id: 'CL-86113', designation: 'Executive' },
+            { name: 'Rahul Roy', key: 'rahul', initials: 'RH', color: '#06b6d4', id: 'CL-84020', designation: 'Associate' },
+            { name: 'Abdul Goni Howlader', key: 'abdul', initials: 'AB', color: '#ec4899', id: 'CL-84541', designation: 'Associate' }
         ];
 
         const DEFAULT_USERS = [
@@ -945,7 +945,7 @@
         function renderMemberCards() {
             const container = document.getElementById('memberCards');
             const cards = TEAM_MEMBERS.map(m => {
-                const memberData = allData.filter(r => r._kam && r._kam.toString().toLowerCase().includes(m.name.toLowerCase()));
+                const memberData = allData.filter(r => r._kam && (r._kam.toString().toLowerCase().includes(m.name.toLowerCase()) || r._kam.toString().toLowerCase().includes(m.name.split(' ').pop().toLowerCase())));
                 const total = memberData.length;
                 const solved = memberData.filter(r => r._solved).length;
                 const pending = total - solved;
@@ -959,7 +959,8 @@
                         <div class="avatar avatar-${m.key}">${m.initials}</div>
                         <div>
                             <div class="font-bold text-slate-800">${m.name}</div>
-                            <div class="text-xs text-slate-400">KAM Member</div>
+                            <div class="text-xs text-slate-500 font-semibold">${m.id || ''}</div>
+                            <div class="text-xs text-slate-400">${m.designation || 'KAM Member'}</div>
                         </div>
                     </div>
                     <div class="grid grid-cols-3 gap-2 mb-3">
@@ -1035,7 +1036,7 @@
 
             if (isMember) {
                 const labelsM = TEAM_MEMBERS.map(m => m.name);
-                const dataM = TEAM_MEMBERS.map(m => allData.filter(r => r._kam && r._kam.toString().toLowerCase().includes(m.name.toLowerCase())).length);
+                const dataM = TEAM_MEMBERS.map(m => allData.filter(r => r._kam && (r._kam.toString().toLowerCase().includes(m.name.toLowerCase()) || r._kam.toString().toLowerCase().includes(m.name.split(' ').pop().toLowerCase()))).length);
                 const ctx = document.getElementById('dailyChart').getContext('2d');
                 if (dailyChart) dailyChart.destroy();
                 dailyChart = new Chart(ctx, {
@@ -1221,7 +1222,7 @@
                 const status = r._solved ? '<span class="ops-badge ops-solved">✓ Solved</span>' :
                                r._urgent ? '<span class="ops-badge" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;">⚠ Urgent</span>' :
                                '<span class="ops-badge ops-other">Pending</span>';
-                const member = TEAM_MEMBERS.find(m => r._kam && r._kam.toString().toLowerCase().includes(m.name.toLowerCase()));
+                const member = TEAM_MEMBERS.find(m => r._kam && (r._kam.toString().toLowerCase().includes(m.name.toLowerCase()) || r._kam.toString().toLowerCase().includes(m.name.split(' ').pop().toLowerCase())));
                 const kamClass = member ? 'kam-tag-' + member.key : 'kam-tag-rudra';
                 const kamInitials = member ? member.initials : '??';
 
@@ -1329,7 +1330,7 @@
         function renderMFMemberCards() {
             const container = document.getElementById('mfMemberCards');
             const cards = TEAM_MEMBERS.map(m => {
-                const memberData = mfData.filter(r => r._kam && r._kam.toString().toLowerCase().includes(m.name.toLowerCase()));
+                const memberData = mfData.filter(r => r._kam && (r._kam.toString().toLowerCase().includes(m.name.toLowerCase()) || r._kam.toString().toLowerCase().includes(m.name.split(' ').pop().toLowerCase())));
                 const total = memberData.length;
                 const solved = memberData.filter(r => r._solved).length;
                 const pending = total - solved;
@@ -1338,7 +1339,11 @@
                 <div class="mf-kam-card mf-kam-${m.key} fade-in">
                     <div class="flex items-center gap-3 mb-4">
                         <div class="mf-kam-avatar mf-kam-avatar-${m.key}">${m.initials}</div>
-                        <div class="mf-kam-name">${m.name}</div>
+                        <div>
+                            <div class="mf-kam-name">${m.name}</div>
+                            <div class="text-xs text-slate-500 font-semibold mt-0.5">${m.id || ''}</div>
+                            <div class="text-xs text-slate-400">${m.designation || 'KAM Member'}</div>
+                        </div>
                     </div>
                     <div class="flex gap-2 mb-3">
                         <div class="mf-kam-stat-box">
