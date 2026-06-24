@@ -409,13 +409,13 @@
 
         // ===================== CONFIG =====================
         const TEAM_MEMBERS = [
-            { name: 'Raian Islam Rudra', key: 'rudra', initials: 'RU', color: '#3b82f6', id: 'CL-86045', designation: 'Senior Executive and leader' },
-            { name: 'Rizvi Ahmed Chowdhury', key: 'rizvi', initials: 'RZ', color: '#ef4444', id: 'CL-84119', designation: 'Associate' },
-            { name: 'MD Sohel Rana', key: 'sohel', initials: 'SH', color: '#10b981', id: 'CL-86023', designation: 'Executive' },
-            { name: 'Hasib Islam', key: 'hasib', initials: 'HS', color: '#f97316', id: 'CL-86024', designation: 'Executive' },
-            { name: 'Jubayer Rahman', key: 'jubayer', initials: 'JU', color: '#8b5cf6', id: 'CL-86113', designation: 'Executive' },
-            { name: 'Rahul Roy', key: 'rahul', initials: 'RH', color: '#06b6d4', id: 'CL-84020', designation: 'Associate' },
-            { name: 'Abdul Goni Howlader', key: 'abdul', initials: 'AB', color: '#ec4899', id: 'CL-84541', designation: 'Associate' }
+            { name: 'Raian Islam Rudra', key: 'rudra', initials: 'RU', color: '#3b82f6', id: 'CL-86045', designation: 'Senior Executive and leader', email: 'raian.rudra@carrybee.com' },
+            { name: 'Rizvi Ahmed Chowdhury', key: 'rizvi', initials: 'RZ', color: '#ef4444', id: 'CL-84119', designation: 'Associate', email: 'rizvi.chy@carrybee.com' },
+            { name: 'MD Sohel Rana', key: 'sohel', initials: 'SH', color: '#10b981', id: 'CL-86023', designation: 'Executive', email: '' },
+            { name: 'Hasib Islam', key: 'hasib', initials: 'HS', color: '#f97316', id: 'CL-86024', designation: 'Executive', email: 'hasib.islam@carrybee.com' },
+            { name: 'Jubayer Rahman', key: 'jubayer', initials: 'JU', color: '#8b5cf6', id: 'CL-86113', designation: 'Executive', email: 'jubayer.rahman@carrybee.com' },
+            { name: 'Rahul Roy', key: 'rahul', initials: 'RH', color: '#06b6d4', id: 'CL-84020', designation: 'Associate', email: 'rahul.roy@carrybee.com' },
+            { name: 'Abdul Goni Howlader', key: 'abdul', initials: 'AB', color: '#ec4899', id: 'CL-84541', designation: 'Associate', email: 'abdul.goni@carrybee.com' }
         ];
 
         const DEFAULT_USERS = [
@@ -695,12 +695,17 @@
                 details: findCol(['Issue Details', 'Issue', 'Details', 'Problem', 'Description']),
                 category: findCol(['Category', 'category', 'Issue Type', 'Type']),
                 status: findCol(['Status', 'status', 'State']),
-                kam: findCol(['KAM', 'kam', 'Member', 'member', 'Assignee', 'Assign To']),
+                kam: findCol(['KAM', 'kam', 'Member', 'member', 'Assignee', 'Assign To', 'Email', 'email', 'Assigned To']),
                 solved: findCol(['Slove date', 'Solved Date', 'Resolved Date', 'Closed Date', 'Date Solved']),
                 sheet: '_sheet'
             };
 
             categories = [...new Set(allData.map(r => r[COL_MAP.category || 'Category'] || 'Uncategorized').filter(Boolean))];
+
+            // Debug column detection
+            console.log('Detected columns:', COL_MAP);
+            console.log('Available columns:', cols);
+            console.log('Total rows:', allData.length);
         }
 
         function processData() {
@@ -708,7 +713,30 @@
                 r._date = parseDateRobust(r[COL_MAP.date || 'Date']);
                 r._solved = !!(r[COL_MAP.solved || 'Slove date'] || r['Solved Date'] || r['Resolved Date']);
                 r._urgent = (r[COL_MAP.status || 'Status'] || '').toString().toLowerCase().includes('urgent');
-                r._kam = r[COL_MAP.kam || 'KAM'] || 'Rudra';
+
+                // KAM matching: try email first, then name, then default to Rudra
+                let kamValue = r[COL_MAP.kam || 'KAM'] || '';
+                let matchedMember = null;
+
+                if (kamValue) {
+                    const kamLower = kamValue.toString().toLowerCase().trim();
+                    // Try email match first
+                    matchedMember = TEAM_MEMBERS.find(m => m.email && kamLower === m.email.toLowerCase());
+                    // Then try name match (first name, last name, or full name)
+                    if (!matchedMember) {
+                        matchedMember = TEAM_MEMBERS.find(m => {
+                            const nameLower = m.name.toLowerCase();
+                            const parts = nameLower.split(' ');
+                            return kamLower === nameLower || 
+                                   parts.some(p => kamLower === p) ||
+                                   kamLower.includes(parts[0]) ||
+                                   (parts.length > 1 && kamLower.includes(parts[parts.length-1]));
+                        });
+                    }
+                }
+
+                r._kam = matchedMember ? matchedMember.name : (kamValue || 'Raian Islam Rudra');
+                r._kamKey = matchedMember ? matchedMember.key : 'rudra';
                 r._category = r[COL_MAP.category || 'Category'] || 'Uncategorized';
             });
         }
@@ -741,7 +769,9 @@
         function renderMemberCards() {
             const container = document.getElementById('memberCards');
             const cards = TEAM_MEMBERS.map(m => {
-                const memberData = allData.filter(r => r._kam && (r._kam.toString().toLowerCase().includes(m.name.toLowerCase()) || r._kam.toString().toLowerCase().includes(m.name.split(' ').pop().toLowerCase())));
+                const memberData = allData.filter(r => r._kamKey === m.key || 
+                    (r._kam && r._kam.toString().toLowerCase().includes(m.name.toLowerCase())) ||
+                    (r._kam && m.email && r._kam.toString().toLowerCase() === m.email.toLowerCase()));
                 const total = memberData.length;
                 const solved = memberData.filter(r => r._solved).length;
                 const pending = total - solved;
@@ -1015,7 +1045,8 @@
                 const status = r._solved ? '<span class="ops-badge ops-solved">✓ Solved</span>' :
                                r._urgent ? '<span class="ops-badge" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;">⚠ Urgent</span>' :
                                '<span class="ops-badge ops-other">Pending</span>';
-                const member = TEAM_MEMBERS.find(m => r._kam && (r._kam.toString().toLowerCase().includes(m.name.toLowerCase()) || r._kam.toString().toLowerCase().includes(m.name.split(' ').pop().toLowerCase())));
+                const member = TEAM_MEMBERS.find(m => r._kamKey === m.key || 
+                    (r._kam && r._kam.toString().toLowerCase().includes(m.name.toLowerCase())));
                 const kamClass = member ? 'kam-tag-' + member.key : 'kam-tag-rudra';
                 const kamInitials = member ? member.initials : '??';
 
