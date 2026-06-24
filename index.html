@@ -426,9 +426,9 @@
         ];
 
         const CSV_URLS = [
-            'https://docs.google.com/spreadsheets/d/e/2PACX-1vQd_example_ISD/pub?output=csv',
-            'https://docs.google.com/spreadsheets/d/e/2PACX-1vQd_example_OSD/pub?output=csv',
-            'https://docs.google.com/spreadsheets/d/e/2PACX-1vQd_example_Central/pub?output=csv'
+            'https://docs.google.com/spreadsheets/d/e/2PACX-1vSAVNwzXLfSVFu4psJlhz7pqMKtEocVNUKChUbpRaFoXVxSric-zuGESs7GyT0R6DO_sF76RE951c3B/pub?output=csv',
+            'https://docs.google.com/spreadsheets/d/e/2PACX-1vRsO79-0XIgKVkMKaIPjkBCp-npePr9WxH8LCX3jcPslWC4PlP4Qsa0qalr6FQuBZGmPsiLnkt2uv2S/pub?output=csv',
+            'https://docs.google.com/spreadsheets/d/e/2PACX-1vRvcHh_-szyOevlR4V86qiagypaMcBaF-ikwfeMJ-vamXKQBH7jWaIrmajn9VdgE5xm78RN_L30O5_s/pub?output=csv'
         ];
 
         
@@ -442,7 +442,11 @@
         let COL_MAP = {};
         let categories = [];
 
-                                
+        let mfData = [];
+        let mfFilteredData = [];
+        let mfCurrentPage = 1;
+        const MF_PAGE_SIZE = 25;
+
         // ===================== AUTH =====================
         function getUsers() {
             try {
@@ -730,45 +734,43 @@
 
             console.log('Detected columns:', COL_MAP);
             console.log('Available columns:', cols);
-            console.log('Total rows:', allData.length);
+            console.log('Total rows before filter:', allData.length);
         }
 
         function processData() {
             allData.forEach(r => {
                 r._date = parseDateRobust(r[COL_MAP.date || 'Timestamp']);
 
-                const feedbackStatus = (r[COL_MAP.solved || 'KAM Feedback Status'] || '').toString().toLowerCase().trim();
-                const issueStatus = (r[COL_MAP.status || 'Issue Status'] || '').toString().toLowerCase().trim();
+                // Check solved status from KAM Feedback Status
+                const feedbackStatus = (r['KAM Feedback Status'] || '').toString().toLowerCase().trim();
+                const issueStatus = (r['Issue Status'] || '').toString().toLowerCase().trim();
                 r._solved = feedbackStatus === 'solved' || feedbackStatus.includes('solved') || 
                            feedbackStatus === 'resolved' || feedbackStatus.includes('resolved') ||
-                           feedbackStatus === 'done' || feedbackStatus === 'closed' ||
-                           issueStatus === 'solved' || issueStatus.includes('solved');
+                           feedbackStatus === 'done' || feedbackStatus === 'closed';
 
                 r._urgent = issueStatus === 'urgent' || issueStatus.includes('urgent') ||
-                           issueStatus === 'high' || issueStatus.includes('high') ||
-                           (r['Priority Scale'] || '').toString().toLowerCase().includes('urgent');
+                           issueStatus === 'high' || issueStatus.includes('high');
 
-                // ONLY match the 7 team members by email
-                let kamValue = r[COL_MAP.kam || 'Email Address'] || r['KAM Name'] || '';
-                kamValue = kamValue.toString().trim().toLowerCase();
-
-                let matchedMember = TEAM_MEMBERS.find(m => m.email && kamValue === m.email.toLowerCase());
+                // Match KAM by Email Address column
+                let emailValue = (r['Email Address'] || '').toString().trim().toLowerCase();
+                let matchedMember = TEAM_MEMBERS.find(m => m.email && emailValue === m.email.toLowerCase());
 
                 if (matchedMember) {
                     r._kam = matchedMember.name;
                     r._kamKey = matchedMember.key;
                     r._kamMatched = true;
                 } else {
-                    r._kam = null;  // Mark as not belonging to team
+                    r._kam = null;
                     r._kamKey = null;
                     r._kamMatched = false;
                 }
 
-                r._category = r[COL_MAP.category || 'Issue Category'] || 'Uncategorized';
+                r._category = r['Issue Category'] || 'Uncategorized';
             });
 
-            // Filter out non-team members
+            // Filter to only team members
             allData = allData.filter(r => r._kamMatched);
+            console.log('Total rows after team filter:', allData.length);
         }
 
         // ===================== RENDER =====================
@@ -777,29 +779,29 @@
             const solved = allData.filter(r => r._solved).length;
             const ratio = total ? Math.round((solved / total) * 100) : 0;
             const urgent = allData.filter(r => r._urgent && !r._solved).length;
-            const pending = total - solved;
+            const irMails = allData.filter(r => (r._category || '').toString().toLowerCase().includes('ir') ||
+                                                (r[COL_MAP.details || ''] || '').toString().toLowerCase().includes('mail')).length;
 
             const cards = [
                 { label: 'Total Issues', value: total, color: 'border-blue', text: 'text-blue-600' },
                 { label: 'Solved', value: solved, color: 'border-green', text: 'text-emerald-600' },
                 { label: 'Solve Ratio', value: ratio + '%', color: 'border-amber', text: 'text-amber-600' },
-                { label: 'Pending', value: pending, color: 'border-purple', text: 'text-purple-600' },
+                { label: 'IR Mails', value: irMails, color: 'border-purple', text: 'text-purple-600' },
                 { label: 'Urgent', value: urgent, color: 'border-rose', text: 'text-rose-600' }
             ];
 
-            document.getElementById('summaryCards').innerHTML = cards.map(c => 
-                '<div class="card summary-card ' + c.color + ' p-5 card-hover fade-in">' +
-                    '<div class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-2">' + c.label + '</div>' +
-                    '<div class="text-3xl font-extrabold ' + c.text + '">' + c.value + '</div>' +
-                '</div>'
-            ).join('');
+            document.getElementById('summaryCards').innerHTML = cards.map(c => `
+                <div class="card summary-card ${c.color} p-5 card-hover fade-in">
+                    <div class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-2">${c.label}</div>
+                    <div class="text-3xl font-extrabold ${c.text}">${c.value}</div>
+                </div>
+            `).join('');
         }
 
         function renderMemberCards() {
             const container = document.getElementById('memberCards');
-
             const cards = TEAM_MEMBERS.map(m => {
-                const memberData = allData.filter(r => r._kamKey === m.key);
+                const memberData = allData.filter(r => r._kam && (r._kam.toString().toLowerCase().includes(m.name.toLowerCase()) || r._kam.toString().toLowerCase().includes(m.name.split(' ').pop().toLowerCase())));
                 const total = memberData.length;
                 const solved = memberData.filter(r => r._solved).length;
                 const pending = total - solved;
@@ -807,39 +809,40 @@
                 const urgent = memberData.filter(r => r._urgent && !r._solved).length;
                 const today = memberData.filter(r => isToday(r._date)).length;
 
-                return '<div class="card p-5 card-hover fade-in">' +
-                    '<div class="flex items-center gap-3 mb-4">' +
-                        '<div class="avatar avatar-' + m.key + '">' + m.initials + '</div>' +
-                        '<div>' +
-                            '<div class="font-bold text-slate-800">' + m.name + '</div>' +
-                            '<div class="text-xs text-slate-500 font-semibold">' + m.id + '</div>' +
-                            '<div class="text-xs text-slate-400">' + m.designation + '</div>' +
-                        '</div>' +
-                    '</div>' +
-                    '<div class="grid grid-cols-3 gap-2 mb-3">' +
-                        '<div class="stat-box">' +
-                            '<div class="text-xl font-extrabold text-slate-800">' + total + '</div>' +
-                            '<div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Total</div>' +
-                        '</div>' +
-                        '<div class="stat-box">' +
-                            '<div class="text-xl font-extrabold text-emerald-600">' + solved + '</div>' +
-                            '<div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Solved</div>' +
-                        '</div>' +
-                        '<div class="stat-box">' +
-                            '<div class="text-xl font-extrabold text-amber-600">' + pending + '</div>' +
-                            '<div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Pending</div>' +
-                        '</div>' +
-                    '</div>' +
-                    '<div class="flex items-center justify-between text-xs mb-1">' +
-                        '<span class="text-slate-500 font-medium">Solve Rate</span>' +
-                        '<span class="font-bold text-slate-700">' + ratio + '%</span>' +
-                    '</div>' +
-                    '<div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">' +
-                        '<div class="h-full rounded-full" style="width: ' + ratio + '%; background: linear-gradient(90deg, ' + m.color + ', ' + m.color + 'aa);"></div>' +
-                    '</div>' +
-                    (urgent > 0 ? '<div class="urgent-bar mt-3"><span>⚠️</span> ' + urgent + ' urgent issue' + (urgent > 1 ? 's' : '') + ' pending</div>' : '') +
-                    (today > 0 ? '<div class="mt-2 text-xs text-slate-500"><span class="today-badge">' + today + ' today</span></div>' : '') +
-                '</div>';
+                return `
+                <div class="card p-5 card-hover fade-in">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="avatar avatar-${m.key}">${m.initials}</div>
+                        <div>
+                            <div class="font-bold text-slate-800">${m.name}</div>
+                            <div class="text-xs text-slate-500 font-semibold">${m.id || ''}</div>
+                            <div class="text-xs text-slate-400">${m.designation || 'KAM Member'}</div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 mb-3">
+                        <div class="stat-box">
+                            <div class="text-xl font-extrabold text-slate-800">${total}</div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Total</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="text-xl font-extrabold text-emerald-600">${solved}</div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Solved</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="text-xl font-extrabold text-amber-600">${pending}</div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Pending</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between text-xs mb-1">
+                        <span class="text-slate-500 font-medium">Solve Rate</span>
+                        <span class="font-bold text-slate-700">${ratio}%</span>
+                    </div>
+                    <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full" style="width: ${ratio}%; background: linear-gradient(90deg, ${m.color}, ${m.color}aa);"></div>
+                    </div>
+                    ${urgent > 0 ? `<div class="urgent-bar mt-3"><span>⚠️</span> ${urgent} urgent issue${urgent > 1 ? 's' : ''} pending</div>` : ''}
+                    ${today > 0 ? `<div class="mt-2 text-xs text-slate-500"><span class="today-badge">${today} today</span></div>` : ''}
+                </div>`;
             }).join('');
             container.innerHTML = cards;
         }
@@ -1056,54 +1059,55 @@
                 return;
             }
 
-            thead.innerHTML = '<th>#</th><th>Date</th><th>Consignment</th><th>Category</th><th>Details</th><th>KAM</th><th>Status</th><th>Sheet</th>';
+            thead.innerHTML = `
+                <th>#</th>
+                <th>Date</th>
+                <th>Consignment</th>
+                <th>Category</th>
+                <th>Details</th>
+                <th>KAM</th>
+                <th>Status</th>
+                <th>Sheet</th>
+            `;
 
             const start = (currentPage - 1) * PAGE_SIZE;
             const end = Math.min(start + PAGE_SIZE, filteredData.length);
             const pageData = filteredData.slice(start, end);
 
             tbody.innerHTML = pageData.map((r, i) => {
-                let statusBadge = '';
-                if (r._solved) {
-                    statusBadge = '<span class="ops-badge ops-solved">✓ Solved</span>';
-                } else if (r._urgent) {
-                    statusBadge = '<span class="ops-badge" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;">⚠ Urgent</span>';
-                } else {
-                    statusBadge = '<span class="ops-badge ops-other">Pending</span>';
-                }
-
-                const member = TEAM_MEMBERS.find(m => r._kamKey === m.key);
-                const kamName = member ? member.name : (r._kam || 'Unknown');
-                const kamInitials = member ? member.initials : '??';
-                const kamColor = member ? member.color : '#3b82f6';
+                const status = r._solved ? '<span class="ops-badge ops-solved">✓ Solved</span>' :
+                               r._urgent ? '<span class="ops-badge" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;">⚠ Urgent</span>' :
+                               '<span class="ops-badge ops-other">Pending</span>';
+                const member = TEAM_MEMBERS.find(m => r._kam && (r._kam.toString().toLowerCase().includes(m.name.toLowerCase()) || r._kam.toString().toLowerCase().includes(m.name.split(' ').pop().toLowerCase())));
                 const kamClass = member ? 'kam-tag-' + member.key : 'kam-tag-rudra';
+                const kamInitials = member ? member.initials : '??';
 
-                return '<tr>' +
-                    '<td><span class="text-xs text-slate-400">' + (start + i + 1) + '</span></td>' +
-                    '<td><span class="text-xs text-slate-600">' + formatDate(r._date) + '</span></td>' +
-                    '<td><span class="font-mono text-xs font-semibold text-slate-700">' + (r[COL_MAP.consignment || 'Consignment ID/Merchant Name (Which one is Applicable)'] || '-') + '</span></td>' +
-                    '<td><span class="category-pill">' + r._category + '</span></td>' +
-                    '<td><span class="text-xs text-slate-700 max-w-xs truncate block">' + (r[COL_MAP.details || 'Issue Details'] || '-') + '</span></td>' +
-                    '<td><span class="kam-tag ' + kamClass + '"><span style="width:18px;height:18px;border-radius:50%;background:' + kamColor + ';color:white;font-size:9px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;">' + kamInitials + '</span>' + kamName + '</span></td>' +
-                    '<td>' + statusBadge + '</td>' +
-                    '<td><span class="text-xs text-slate-500">' + (r._sheet || '-') + '</span></td>' +
-                '</tr>';
+                return `<tr>
+                    <td><span class="text-xs text-slate-400">${start + i + 1}</span></td>
+                    <td><span class="text-xs text-slate-600">${formatDate(r._date)}</span></td>
+                    <td><span class="font-mono text-xs font-semibold text-slate-700">${r[COL_MAP.consignment || 'Consignment'] || '-'}</span></td>
+                    <td><span class="category-pill">${r._category}</span></td>
+                    <td><span class="text-xs text-slate-700 max-w-xs truncate block">${r[COL_MAP.details || 'Issue Details'] || '-'}</span></td>
+                    <td><span class="kam-tag ${kamClass}"><span style="width:18px;height:18px;border-radius:50%;background:${member ? member.color : '#3b82f6'};color:white;font-size:9px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;">${kamInitials}</span>${r._kam}</span></td>
+                    <td>${status}</td>
+                    <td><span class="text-xs text-slate-500">${r._sheet || '-'}</span></td>
+                </tr>`;
             }).join('');
 
-            document.getElementById('showingText').textContent = 'Showing ' + (start + 1) + '-' + end + ' of ' + filteredData.length + ' issues';
+            document.getElementById('showingText').textContent = `Showing ${start + 1}-${end} of ${filteredData.length} issues`;
 
             const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
             let pagHTML = '';
             if (totalPages > 1) {
-                pagHTML += '<button onclick="changePage(' + (currentPage - 1) + ')" ' + (currentPage === 1 ? 'disabled' : '') + ' class="page-btn" style="' + (currentPage === 1 ? 'opacity:0.4;cursor:not-allowed;' : '') + '">Prev</button>';
+                pagHTML += `<button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="page-btn" style="${currentPage === 1 ? 'opacity:0.4;cursor:not-allowed;' : ''}">Prev</button>`;
                 for (let i = 1; i <= totalPages; i++) {
                     if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
-                        pagHTML += '<button onclick="changePage(' + i + ')" class="page-btn ' + (i === currentPage ? 'active' : '') + '">' + i + '</button>';
+                        pagHTML += `<button onclick="changePage(${i})" class="page-btn ${i === currentPage ? 'active' : ''}">${i}</button>`;
                     } else if (i === currentPage - 2 || i === currentPage + 2) {
-                        pagHTML += '<span class="page-dots">...</span>';
+                        pagHTML += `<span class="page-dots">...</span>`;
                     }
                 }
-                pagHTML += '<button onclick="changePage(' + (currentPage + 1) + ')" ' + (currentPage === totalPages ? 'disabled' : '') + ' class="page-btn" style="' + (currentPage === totalPages ? 'opacity:0.4;cursor:not-allowed;' : '') + '">Next</button>';
+                pagHTML += `<button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="page-btn" style="${currentPage === totalPages ? 'opacity:0.4;cursor:not-allowed;' : ''}">Next</button>`;
             }
             document.getElementById('pagination').innerHTML = pagHTML;
         }
