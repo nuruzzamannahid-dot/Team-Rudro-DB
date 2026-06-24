@@ -578,6 +578,828 @@
 
     <script>
 
+        // ===================== CONFIG =====================
+        const TEAM_MEMBERS = [
+            { name: 'Rudra', key: 'rudra', initials: 'RU', color: '#3b82f6' },
+            { name: 'Rizvi', key: 'rizvi', initials: 'RZ', color: '#ef4444' },
+            { name: 'Sohel', key: 'sohel', initials: 'SH', color: '#10b981' },
+            { name: 'Hasib', key: 'hasib', initials: 'HS', color: '#f97316' },
+            { name: 'Jubayer', key: 'jubayer', initials: 'JU', color: '#8b5cf6' },
+            { name: 'Rahul', key: 'rahul', initials: 'RH', color: '#06b6d4' },
+            { name: 'Abdul', key: 'abdul', initials: 'AB', color: '#ec4899' }
+        ];
+
+        const DEFAULT_USERS = [
+            { username: 'rudra', password: 'rudra123', role: 'admin' },
+            { username: 'admin', password: 'admin123', role: 'admin' }
+        ];
+
+        const CSV_URLS = [
+            'https://docs.google.com/spreadsheets/d/e/2PACX-1vQd_example_ISD/pub?output=csv',
+            'https://docs.google.com/spreadsheets/d/e/2PACX-1vQd_example_OSD/pub?output=csv',
+            'https://docs.google.com/spreadsheets/d/e/2PACX-1vQd_example_Central/pub?output=csv'
+        ];
+
+        const MF_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQd_example_MF/pub?output=csv';
+
+        let allData = [];
+        let filteredData = [];
+        let currentPage = 1;
+        const PAGE_SIZE = 25;
+        let categoryChart = null;
+        let dailyChart = null;
+        let currentPeriod = '7d';
+        let COL_MAP = {};
+        let categories = [];
+
+        let mfData = [];
+        let mfFilteredData = [];
+        let mfCurrentPage = 1;
+        const MF_PAGE_SIZE = 25;
+
+        // ===================== AUTH =====================
+        function getUsers() {
+            try {
+                const stored = localStorage.getItem('re_users');
+                if (stored) return JSON.parse(stored);
+            } catch (e) {}
+            return JSON.parse(JSON.stringify(DEFAULT_USERS));
+        }
+
+        function saveUsers(users) {
+            localStorage.setItem('re_users', JSON.stringify(users));
+        }
+
+        function hashPass(str) {
+            let h = 0;
+            for (let i = 0; i < str.length; i++) {
+                h = ((h << 5) - h) + str.charCodeAt(i);
+                h |= 0;
+            }
+            return 'h' + Math.abs(h);
+        }
+
+        function checkAuth() {
+            const session = sessionStorage.getItem('re_session');
+            const remember = localStorage.getItem('re_remember');
+            if (session || remember) {
+                document.getElementById('authOverlay').style.display = 'none';
+                document.getElementById('appContent').style.display = '';
+                const user = JSON.parse(session || remember);
+                if (user.role === 'admin') {
+                    document.getElementById('adminBtn').classList.remove('hidden');
+                    document.getElementById('adminBtn').classList.add('flex');
+                }
+                refreshAll();
+                return true;
+            }
+            return false;
+        }
+
+        function doLogin() {
+            const user = document.getElementById('authUser').value.trim().toLowerCase();
+            const pass = document.getElementById('authPass').value;
+            const remember = document.getElementById('authRemember').checked;
+            const users = getUsers();
+            const found = users.find(u => u.username === user && u.password === pass);
+            if (found) {
+                const session = JSON.stringify({ username: found.username, role: found.role });
+                sessionStorage.setItem('re_session', session);
+                if (remember) localStorage.setItem('re_remember', session);
+                document.getElementById('authOverlay').style.display = 'none';
+                document.getElementById('appContent').style.display = '';
+                document.getElementById('authError').style.display = 'none';
+                if (found.role === 'admin') {
+                    document.getElementById('adminBtn').classList.remove('hidden');
+                    document.getElementById('adminBtn').classList.add('flex');
+                }
+                refreshAll();
+            } else {
+                document.getElementById('authError').style.display = 'block';
+            }
+        }
+
+        function doLogout() {
+            sessionStorage.removeItem('re_session');
+            localStorage.removeItem('re_remember');
+            location.reload();
+        }
+
+        function togglePassword() {
+            const input = document.getElementById('authPass');
+            const eye = document.getElementById('eyeIcon');
+            const eyeOff = document.getElementById('eyeOffIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                eye.style.display = 'none';
+                eyeOff.style.display = 'block';
+            } else {
+                input.type = 'password';
+                eye.style.display = 'block';
+                eyeOff.style.display = 'none';
+            }
+        }
+
+        // ===================== ADMIN =====================
+        function openAdminPanel() {
+            document.getElementById('adminModal').classList.remove('hidden');
+            renderUsersList();
+        }
+
+        function closeAdminPanel() {
+            document.getElementById('adminModal').classList.add('hidden');
+        }
+
+        function renderUsersList() {
+            const users = getUsers();
+            const container = document.getElementById('usersList');
+            container.innerHTML = users.map((u, i) => `
+                <div class="flex items-center justify-between bg-slate-50 rounded-lg px-4 py-3">
+                    <div>
+                        <span class="font-semibold text-slate-700 text-sm">${u.username}</span>
+                        <span class="text-xs text-slate-400 ml-2 uppercase tracking-wider">${u.role}</span>
+                    </div>
+                    <button onclick="removeUser(${i})" class="text-rose-500 hover:text-rose-700 text-xs font-semibold">Remove</button>
+                </div>
+            `).join('');
+        }
+
+        function addNewUser() {
+            const name = document.getElementById('newUserName').value.trim().toLowerCase();
+            const pass = document.getElementById('newUserPass').value;
+            const role = document.getElementById('newUserRole').value;
+            const err = document.getElementById('adminError');
+            if (!name || !pass) { err.textContent = 'Username and password required'; err.style.display = 'block'; return; }
+            const users = getUsers();
+            if (users.find(u => u.username === name)) { err.textContent = 'Username already exists'; err.style.display = 'block'; return; }
+            users.push({ username: name, password: pass, role: role });
+            saveUsers(users);
+            err.style.display = 'none';
+            document.getElementById('newUserName').value = '';
+            document.getElementById('newUserPass').value = '';
+            renderUsersList();
+        }
+
+        function removeUser(idx) {
+            const users = getUsers();
+            const current = JSON.parse(sessionStorage.getItem('re_session') || localStorage.getItem('re_remember') || '{}');
+            if (users[idx].username === current.username) { alert('Cannot remove yourself'); return; }
+            users.splice(idx, 1);
+            saveUsers(users);
+            renderUsersList();
+        }
+
+        // ===================== THEME =====================
+        function initTheme() {
+            const dark = localStorage.getItem('re_dark') === 'true';
+            if (dark) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('themeToggle').classList.add('dark');
+            }
+        }
+
+        function toggleDarkMode() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            document.getElementById('themeToggle').classList.toggle('dark');
+            localStorage.setItem('re_dark', isDark);
+            if (categoryChart) categoryChart.update();
+            if (dailyChart) dailyChart.update();
+        }
+
+        // ===================== DATE HELPERS =====================
+        function parseDateRobust(str) {
+            if (!str) return null;
+            if (str instanceof Date) return isNaN(str) ? null : str;
+            str = String(str).trim();
+            if (!str) return null;
+
+            // Try DD/MM/YYYY or DD-MM-YYYY
+            let m = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+            if (m) {
+                const d = new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1]));
+                return isNaN(d) ? null : d;
+            }
+
+            // Try MM/DD/YYYY or MM-DD-YYYY
+            m = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+            if (m) {
+                const d = new Date(parseInt(m[3]), parseInt(m[1]) - 1, parseInt(m[2]));
+                if (!isNaN(d)) return d;
+            }
+
+            // Try standard parse
+            const d = new Date(str);
+            return isNaN(d) ? null : d;
+        }
+
+        function getResolutionGap(raised, solved, isSolved) {
+            if (!raised) return '-';
+            if (isSolved && solved) {
+                const diff = Math.ceil((solved - raised) / (1000 * 60 * 60 * 24));
+                return diff + 'd';
+            }
+            const diff = Math.ceil((new Date() - raised) / (1000 * 60 * 60 * 24));
+            return diff + 'd pending';
+        }
+
+        function isToday(d) {
+            if (!d) return false;
+            const now = new Date();
+            return d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        }
+
+        function isThisWeek(d) {
+            if (!d) return false;
+            const now = new Date();
+            const start = new Date(now); start.setDate(now.getDate() - now.getDay());
+            start.setHours(0,0,0,0);
+            return d >= start;
+        }
+
+        function isThisMonth(d) {
+            if (!d) return false;
+            const now = new Date();
+            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        }
+
+        function formatDate(d) {
+            if (!d) return '-';
+            return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+
+        function formatDateTime(d) {
+            if (!d) return '-';
+            return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        // ===================== DATA FETCH =====================
+        async function fetchCSV(url) {
+            try {
+                const res = await fetch(url, { cache: 'no-store' });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const text = await res.text();
+                return Papa.parse(text, { header: true, skipEmptyLines: true }).data;
+            } catch (e) {
+                console.error('Fetch error:', url, e);
+                return [];
+            }
+        }
+
+        async function loadAllData() {
+            const results = await Promise.all(CSV_URLS.map((url, i) => fetchCSV(url).then(rows => rows.map(r => ({ ...r, _sheet: 'Sheet ' + (i + 1) })))));
+            allData = results.flat();
+            detectColumns();
+            processData();
+            populateFilters();
+            applyFilters();
+            renderSummary();
+            renderMemberCards();
+            renderCategoryChart();
+            renderDailyChart();
+        }
+
+        async function loadMFData() {
+            const rows = await fetchCSV(MF_CSV_URL);
+            mfData = rows.map(r => {
+                const date = parseDateRobust(r['Date'] || r['date'] || r['Date Raised'] || r['Raised Date']);
+                const solved = (r['Status'] || r['status'] || '').toString().toLowerCase().includes('solved') ||
+                               (r['Status'] || r['status'] || '').toString().toLowerCase().includes('resolved') ||
+                               (r['Slove date'] || r['Solved Date'] || r['Resolved Date'] || '');
+                const urgent = (r['Status'] || r['status'] || '').toString().toLowerCase().includes('urgent');
+                const kam = r['KAM'] || r['kam'] || r['Member'] || r['member'] || r['Assignee'] || 'Rudra';
+                return {
+                    _raw: r,
+                    _date: date,
+                    _dateRaw: r['Date'] || r['date'] || r['Date Raised'] || r['Raised Date'],
+                    _solved: !!solved,
+                    _urgent: urgent,
+                    _kam: kam,
+                    _category: r['Category'] || r['category'] || r['Issue Type'] || 'General'
+                };
+            });
+            applyMFFilters();
+            renderMFSummary();
+            renderMFMemberCards();
+        }
+
+        function detectColumns() {
+            if (!allData.length) return;
+            const first = allData[0];
+            const cols = Object.keys(first);
+
+            const findCol = (names) => names.find(n => cols.includes(n));
+
+            COL_MAP = {
+                date: findCol(['Date', 'date', 'Date Raised', 'Raised Date', 'Created']),
+                consignment: findCol(['Consignment', 'consignment', 'CN', 'CN No', 'Tracking']),
+                details: findCol(['Issue Details', 'Issue', 'Details', 'Problem', 'Description']),
+                category: findCol(['Category', 'category', 'Issue Type', 'Type']),
+                status: findCol(['Status', 'status', 'State']),
+                kam: findCol(['KAM', 'kam', 'Member', 'member', 'Assignee', 'Assign To']),
+                solved: findCol(['Slove date', 'Solved Date', 'Resolved Date', 'Closed Date', 'Date Solved']),
+                sheet: '_sheet'
+            };
+
+            categories = [...new Set(allData.map(r => r[COL_MAP.category || 'Category'] || 'Uncategorized').filter(Boolean))];
+        }
+
+        function processData() {
+            allData.forEach(r => {
+                r._date = parseDateRobust(r[COL_MAP.date || 'Date']);
+                r._solved = !!(r[COL_MAP.solved || 'Slove date'] || r['Solved Date'] || r['Resolved Date']);
+                r._urgent = (r[COL_MAP.status || 'Status'] || '').toString().toLowerCase().includes('urgent');
+                r._kam = r[COL_MAP.kam || 'KAM'] || 'Rudra';
+                r._category = r[COL_MAP.category || 'Category'] || 'Uncategorized';
+            });
+        }
+
+        // ===================== RENDER =====================
+        function renderSummary() {
+            const total = allData.length;
+            const solved = allData.filter(r => r._solved).length;
+            const ratio = total ? Math.round((solved / total) * 100) : 0;
+            const urgent = allData.filter(r => r._urgent && !r._solved).length;
+            const irMails = allData.filter(r => (r._category || '').toString().toLowerCase().includes('ir') ||
+                                                (r[COL_MAP.details || ''] || '').toString().toLowerCase().includes('mail')).length;
+
+            const cards = [
+                { label: 'Total Issues', value: total, color: 'border-blue', text: 'text-blue-600' },
+                { label: 'Solved', value: solved, color: 'border-green', text: 'text-emerald-600' },
+                { label: 'Solve Ratio', value: ratio + '%', color: 'border-amber', text: 'text-amber-600' },
+                { label: 'IR Mails', value: irMails, color: 'border-purple', text: 'text-purple-600' },
+                { label: 'Urgent', value: urgent, color: 'border-rose', text: 'text-rose-600' }
+            ];
+
+            document.getElementById('summaryCards').innerHTML = cards.map(c => `
+                <div class="card summary-card ${c.color} p-5 card-hover fade-in">
+                    <div class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-2">${c.label}</div>
+                    <div class="text-3xl font-extrabold ${c.text}">${c.value}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderMemberCards() {
+            const container = document.getElementById('memberCards');
+            const cards = TEAM_MEMBERS.map(m => {
+                const memberData = allData.filter(r => r._kam && r._kam.toString().toLowerCase().includes(m.name.toLowerCase()));
+                const total = memberData.length;
+                const solved = memberData.filter(r => r._solved).length;
+                const pending = total - solved;
+                const ratio = total ? Math.round((solved / total) * 100) : 0;
+                const urgent = memberData.filter(r => r._urgent && !r._solved).length;
+                const today = memberData.filter(r => isToday(r._date)).length;
+
+                return `
+                <div class="card p-5 card-hover fade-in">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="avatar avatar-${m.key}">${m.initials}</div>
+                        <div>
+                            <div class="font-bold text-slate-800">${m.name}</div>
+                            <div class="text-xs text-slate-400">KAM Member</div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 mb-3">
+                        <div class="stat-box">
+                            <div class="text-xl font-extrabold text-slate-800">${total}</div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Total</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="text-xl font-extrabold text-emerald-600">${solved}</div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Solved</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="text-xl font-extrabold text-amber-600">${pending}</div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Pending</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between text-xs mb-1">
+                        <span class="text-slate-500 font-medium">Solve Rate</span>
+                        <span class="font-bold text-slate-700">${ratio}%</span>
+                    </div>
+                    <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full" style="width: ${ratio}%; background: linear-gradient(90deg, ${m.color}, ${m.color}aa);"></div>
+                    </div>
+                    ${urgent > 0 ? `<div class="urgent-bar mt-3"><span>⚠️</span> ${urgent} urgent issue${urgent > 1 ? 's' : ''} pending</div>` : ''}
+                    ${today > 0 ? `<div class="mt-2 text-xs text-slate-500"><span class="today-badge">${today} today</span></div>` : ''}
+                </div>`;
+            }).join('');
+            container.innerHTML = cards;
+        }
+
+        function renderCategoryChart() {
+            const counts = {};
+            allData.forEach(r => {
+                const cat = r._category || 'Uncategorized';
+                counts[cat] = (counts[cat] || 0) + 1;
+            });
+            const labels = Object.keys(counts);
+            const data = Object.values(counts);
+            const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#f43f5e', '#06b6d4', '#ec4899', '#64748b'];
+
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            if (categoryChart) categoryChart.destroy();
+            categoryChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Issues',
+                        data: data,
+                        backgroundColor: colors,
+                        borderRadius: 8,
+                        barThickness: 32
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 11 }, color: '#94a3b8' } },
+                        x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#64748b' } }
+                    }
+                }
+            });
+        }
+
+        function renderDailyChart() {
+            const now = new Date();
+            const days = currentPeriod === '7d' ? 7 : (currentPeriod === '30d' ? 30 : 365);
+            const labels = [];
+            const data = [];
+            const isMember = currentPeriod === 'member';
+
+            if (isMember) {
+                const labelsM = TEAM_MEMBERS.map(m => m.name);
+                const dataM = TEAM_MEMBERS.map(m => allData.filter(r => r._kam && r._kam.toString().toLowerCase().includes(m.name.toLowerCase())).length);
+                const ctx = document.getElementById('dailyChart').getContext('2d');
+                if (dailyChart) dailyChart.destroy();
+                dailyChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labelsM,
+                        datasets: [{
+                            label: 'Issues',
+                            data: dataM,
+                            backgroundColor: TEAM_MEMBERS.map(m => m.color),
+                            borderRadius: 8,
+                            barThickness: 40
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 11 }, color: '#94a3b8' } },
+                            x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#64748b' } }
+                        }
+                    }
+                });
+                return;
+            }
+
+            for (let i = days - 1; i >= 0; i--) {
+                const d = new Date(now);
+                d.setDate(d.getDate() - i);
+                d.setHours(0, 0, 0, 0);
+                const label = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+                labels.push(label);
+                const count = allData.filter(r => {
+                    if (!r._date) return false;
+                    return r._date.getDate() === d.getDate() && r._date.getMonth() === d.getMonth() && r._date.getFullYear() === d.getFullYear();
+                }).length;
+                data.push(count);
+            }
+
+            const todayCount = data[data.length - 1] || 0;
+            document.getElementById('todayCount').textContent = 'TODAY: ' + todayCount;
+
+            const ctx = document.getElementById('dailyChart').getContext('2d');
+            if (dailyChart) dailyChart.destroy();
+            dailyChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Issues',
+                        data: data,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59,130,246,0.08)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#3b82f6',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 11 }, color: '#94a3b8' } },
+                        x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#64748b', maxRotation: 45 } }
+                    }
+                }
+            });
+        }
+
+        function setPeriod(period, btn) {
+            currentPeriod = period;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderDailyChart();
+        }
+
+        // ===================== FILTERS & TABLE =====================
+        function populateFilters() {
+            const catSelect = document.getElementById('categoryFilter');
+            catSelect.innerHTML = '<option value="all">All categories</option>' + categories.map(c => `<option value="${c}">${c}</option>`).join('');
+
+            const kamSelect = document.getElementById('kamFilter');
+            const kams = [...new Set(allData.map(r => r._kam).filter(Boolean))];
+            kamSelect.innerHTML = '<option value="all">All Members</option>' + kams.map(k => `<option value="${k}">${k}</option>`).join('');
+
+            const mfKamSelect = document.getElementById('mfKAMFilter');
+            mfKamSelect.innerHTML = '<option value="all">All members</option>' + TEAM_MEMBERS.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
+        }
+
+        function initFilterPills() {
+            const pills = ['All', 'Today', 'This Week', 'This Month', 'Solved', 'Pending', 'Urgent'];
+            const container = document.getElementById('filterPills');
+            container.innerHTML = pills.map((p, i) => `<button class="filter-pill ${i === 0 ? 'active' : ''}" onclick="setFilterPill('${p}', this)">${p}</button>`).join('');
+        }
+
+        function setFilterPill(filter, btn) {
+            document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            if (filter === 'All') {
+                document.getElementById('dateFilter').value = 'all';
+                document.getElementById('searchInput').value = '';
+            } else if (filter === 'Today') {
+                document.getElementById('dateFilter').value = 'today';
+            } else if (filter === 'This Week') {
+                document.getElementById('dateFilter').value = 'week';
+            } else if (filter === 'This Month') {
+                document.getElementById('dateFilter').value = 'month';
+            } else if (filter === 'Solved') {
+                document.getElementById('searchInput').value = 'status:solved';
+            } else if (filter === 'Pending') {
+                document.getElementById('searchInput').value = 'status:pending';
+            } else if (filter === 'Urgent') {
+                document.getElementById('searchInput').value = 'status:urgent';
+            }
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const dateFilter = document.getElementById('dateFilter').value;
+            const category = document.getElementById('categoryFilter').value;
+            const kam = document.getElementById('kamFilter').value;
+            const sheet = document.getElementById('sheetFilter').value;
+
+            filteredData = allData.filter(r => {
+                if (search) {
+                    const text = JSON.stringify(r).toLowerCase();
+                    if (search.startsWith('status:')) {
+                        const st = search.replace('status:', '').trim();
+                        if (st === 'solved' && !r._solved) return false;
+                        if (st === 'pending' && r._solved) return false;
+                        if (st === 'urgent' && !r._urgent) return false;
+                    } else if (!text.includes(search)) {
+                        return false;
+                    }
+                }
+                if (dateFilter === 'today' && !isToday(r._date)) return false;
+                if (dateFilter === 'week' && !isThisWeek(r._date)) return false;
+                if (dateFilter === 'month' && !isThisMonth(r._date)) return false;
+                if (category !== 'all' && r._category !== category) return false;
+                if (kam !== 'all' && r._kam !== kam) return false;
+                if (sheet !== 'all' && r._sheet !== sheet) return false;
+                return true;
+            });
+
+            currentPage = 1;
+            renderTable();
+        }
+
+        function renderTable() {
+            const thead = document.getElementById('tableHeader');
+            const tbody = document.getElementById('tableBody');
+
+            if (!filteredData.length) {
+                thead.innerHTML = '<th>No Data</th>';
+                tbody.innerHTML = '<tr><td colspan="100" class="empty-state">No issues found matching your filters.</td></tr>';
+                document.getElementById('showingText').textContent = 'Showing 0 of 0 issues';
+                document.getElementById('pagination').innerHTML = '';
+                return;
+            }
+
+            thead.innerHTML = `
+                <th>#</th>
+                <th>Date</th>
+                <th>Consignment</th>
+                <th>Category</th>
+                <th>Details</th>
+                <th>KAM</th>
+                <th>Status</th>
+                <th>Sheet</th>
+            `;
+
+            const start = (currentPage - 1) * PAGE_SIZE;
+            const end = Math.min(start + PAGE_SIZE, filteredData.length);
+            const pageData = filteredData.slice(start, end);
+
+            tbody.innerHTML = pageData.map((r, i) => {
+                const status = r._solved ? '<span class="ops-badge ops-solved">✓ Solved</span>' :
+                               r._urgent ? '<span class="ops-badge" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;">⚠ Urgent</span>' :
+                               '<span class="ops-badge ops-other">Pending</span>';
+                const member = TEAM_MEMBERS.find(m => r._kam && r._kam.toString().toLowerCase().includes(m.name.toLowerCase()));
+                const kamClass = member ? 'kam-tag-' + member.key : 'kam-tag-rudra';
+                const kamInitials = member ? member.initials : '??';
+
+                return `<tr>
+                    <td><span class="text-xs text-slate-400">${start + i + 1}</span></td>
+                    <td><span class="text-xs text-slate-600">${formatDate(r._date)}</span></td>
+                    <td><span class="font-mono text-xs font-semibold text-slate-700">${r[COL_MAP.consignment || 'Consignment'] || '-'}</span></td>
+                    <td><span class="category-pill">${r._category}</span></td>
+                    <td><span class="text-xs text-slate-700 max-w-xs truncate block">${r[COL_MAP.details || 'Issue Details'] || '-'}</span></td>
+                    <td><span class="kam-tag ${kamClass}"><span style="width:18px;height:18px;border-radius:50%;background:${member ? member.color : '#3b82f6'};color:white;font-size:9px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;">${kamInitials}</span>${r._kam}</span></td>
+                    <td>${status}</td>
+                    <td><span class="text-xs text-slate-500">${r._sheet || '-'}</span></td>
+                </tr>`;
+            }).join('');
+
+            document.getElementById('showingText').textContent = `Showing ${start + 1}-${end} of ${filteredData.length} issues`;
+
+            const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
+            let pagHTML = '';
+            if (totalPages > 1) {
+                pagHTML += `<button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="page-btn" style="${currentPage === 1 ? 'opacity:0.4;cursor:not-allowed;' : ''}">Prev</button>`;
+                for (let i = 1; i <= totalPages; i++) {
+                    if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                        pagHTML += `<button onclick="changePage(${i})" class="page-btn ${i === currentPage ? 'active' : ''}">${i}</button>`;
+                    } else if (i === currentPage - 2 || i === currentPage + 2) {
+                        pagHTML += `<span class="page-dots">...</span>`;
+                    }
+                }
+                pagHTML += `<button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="page-btn" style="${currentPage === totalPages ? 'opacity:0.4;cursor:not-allowed;' : ''}">Next</button>`;
+            }
+            document.getElementById('pagination').innerHTML = pagHTML;
+        }
+
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            renderTable();
+        }
+
+        // ===================== SETTINGS =====================
+        function openSettings() {
+            const content = document.getElementById('settingsContent');
+            const cols = allData.length ? Object.keys(allData[0]).filter(k => !k.startsWith('_')) : [];
+            content.innerHTML = `
+                <div class="space-y-3">
+                    <div><label class="block text-xs font-semibold text-slate-600 mb-1">Date Column</label><select id="setDate" class="dropdown-select w-full">${cols.map(c => `<option value="${c}" ${c === (COL_MAP.date || '') ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+                    <div><label class="block text-xs font-semibold text-slate-600 mb-1">Consignment Column</label><select id="setConsignment" class="dropdown-select w-full">${cols.map(c => `<option value="${c}" ${c === (COL_MAP.consignment || '') ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+                    <div><label class="block text-xs font-semibold text-slate-600 mb-1">Details Column</label><select id="setDetails" class="dropdown-select w-full">${cols.map(c => `<option value="${c}" ${c === (COL_MAP.details || '') ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+                    <div><label class="block text-xs font-semibold text-slate-600 mb-1">Category Column</label><select id="setCategory" class="dropdown-select w-full">${cols.map(c => `<option value="${c}" ${c === (COL_MAP.category || '') ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+                    <div><label class="block text-xs font-semibold text-slate-600 mb-1">KAM Column</label><select id="setKAM" class="dropdown-select w-full">${cols.map(c => `<option value="${c}" ${c === (COL_MAP.kam || '') ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+                    <div><label class="block text-xs font-semibold text-slate-600 mb-1">Solved Date Column</label><select id="setSolved" class="dropdown-select w-full">${cols.map(c => `<option value="${c}" ${c === (COL_MAP.solved || '') ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+                </div>
+            `;
+            document.getElementById('settingsModal').classList.remove('hidden');
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
+
+        function saveSettings() {
+            COL_MAP = {
+                date: document.getElementById('setDate').value,
+                consignment: document.getElementById('setConsignment').value,
+                details: document.getElementById('setDetails').value,
+                category: document.getElementById('setCategory').value,
+                kam: document.getElementById('setKAM').value,
+                solved: document.getElementById('setSolved').value,
+                sheet: '_sheet'
+            };
+            localStorage.setItem('re_colmap', JSON.stringify(COL_MAP));
+            processData();
+            populateFilters();
+            applyFilters();
+            renderSummary();
+            renderMemberCards();
+            renderCategoryChart();
+            renderDailyChart();
+            closeSettings();
+        }
+
+        // ===================== REFRESH =====================
+        async function refreshAll() {
+            const btn = document.getElementById('refreshBtn');
+            btn.innerHTML = '<svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Refreshing...';
+            await loadAllData();
+            await loadMFData();
+            document.getElementById('lastUpdate').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+            btn.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Refresh';
+        }
+
+        // ===================== MAIL FEEDBACK =====================
+        function renderMFSummary() {
+            const total = mfData.length;
+            const solved = mfData.filter(r => r._solved).length;
+            const pending = total - solved;
+            const ratio = total ? Math.round((solved / total) * 100) : 0;
+            document.getElementById('mfTotalRaised').textContent = total;
+            document.getElementById('mfPending').textContent = pending;
+            document.getElementById('mfSolved').textContent = solved;
+            document.getElementById('mfSolveRatio').textContent = ratio + '%';
+        }
+
+        function renderMFMemberCards() {
+            const container = document.getElementById('mfMemberCards');
+            const cards = TEAM_MEMBERS.map(m => {
+                const memberData = mfData.filter(r => r._kam && r._kam.toString().toLowerCase().includes(m.name.toLowerCase()));
+                const total = memberData.length;
+                const solved = memberData.filter(r => r._solved).length;
+                const pending = total - solved;
+                const ratio = total ? Math.round((solved / total) * 100) : 0;
+                return `
+                <div class="mf-kam-card mf-kam-${m.key} fade-in">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="mf-kam-avatar mf-kam-avatar-${m.key}">${m.initials}</div>
+                        <div class="mf-kam-name">${m.name}</div>
+                    </div>
+                    <div class="flex gap-2 mb-3">
+                        <div class="mf-kam-stat-box">
+                            <div class="mf-kam-stat-value mf-card-value-purple">${total}</div>
+                            <div class="mf-kam-stat-label">Total</div>
+                        </div>
+                        <div class="mf-kam-stat-box">
+                            <div class="mf-kam-stat-value mf-card-value-green">${solved}</div>
+                            <div class="mf-kam-stat-label">Solved</div>
+                        </div>
+                        <div class="mf-kam-stat-box">
+                            <div class="mf-kam-stat-value mf-card-value-amber">${pending}</div>
+                            <div class="mf-kam-stat-label">Pending</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="mf-kam-ratio">Solve Rate</span>
+                        <span class="mf-kam-ratio">${ratio}%</span>
+                    </div>
+                    <div class="mf-kam-progress">
+                        <div class="mf-kam-progress-fill mf-kam-progress-${m.key}" style="width: ${ratio}%"></div>
+                    </div>
+                </div>`;
+            }).join('');
+            container.innerHTML = cards;
+        }
+
+        function applyMFFilters() {
+            const search = document.getElementById('mfSearchInput').value.toLowerCase();
+            const status = document.getElementById('mfStatusFilter').value;
+            const kam = document.getElementById('mfKAMFilter').value;
+
+            mfFilteredData = mfData.filter(r => {
+                if (search) {
+                    const subject = (r._raw['Mail Subject Line'] || r._raw['Mail Subject'] || r._raw['Subject'] || r._raw['Issue'] || r._raw['Issue Details'] || r._category || '').toLowerCase();
+                    if (!subject.includes(search)) return false;
+                }
+                if (status === 'solved' && !r._solved) return false;
+                if (status === 'pending' && r._solved) return false;
+                if (status === 'urgent' && !r._urgent) return false;
+                if (kam !== 'all' && r._kam !== kam) return false;
+                return true;
+            });
+
+            mfCurrentPage = 1;
+            renderMFTable();
+        }
+
+        function renderMFTable() {
+            const tbody = document.getElementById('mfTableBody');
+            if (!mfFilteredData.length) {
+                tbody.innerHTML = '<tr><td colspan="100" class="mf-empty"><div class="mf-empty-icon">📭</div><div>No mail feedback found.</div></td></tr>';
+                document.getElementById('mfShowingText').textContent = 'Showing 0 of 0 mails';
+                document.getElementById('mfPagination').innerHTML = '';
+                return;
+            }
+
+            const start = (mfCurrentPage - 1) * MF_PAGE_SIZE;
+            const end = Math.min(start + MF_PAGE_SIZE, mfFilteredData.length);
+            const pageData = mfFilteredData.slice(start, end);
+
+            const bodyHTML = pageData.map((d, idx) => {
+                let statusClass = 'mf-status-pending';
+                let statusText = 'Pending';
+                let statusIcon = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>';
                 if (d._solved) { statusClass = 'mf-status-solved'; statusText = 'Solved'; statusIcon = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'; }
                 else if (d._urgent) { statusClass = 'mf-status-urgent'; statusText = 'Urgent'; statusIcon = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>'; }
                 const member = TEAM_MEMBERS.find(m => m.name === d._kam);
