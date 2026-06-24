@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revenue Engine Issue Tracker Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?v=2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #f0f4f8; }
+        .card { background: white; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04); }
+        .card-hover { transition: all 0.25s ease; }
+        .card-hover:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+        .summary-card { border-top: 4px solid; }
+        .border-blue { border-color: #3b82f6; }
+        .border-green { border-color: #10b981; }
+        .border-amber { border-color: #f59e0b; }
+        .border-purple { border-color: #8b5cf6; }
+        .border-rose { border-color: #f43f5e; }
+        .avatar { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: white; }
+        .badge { padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+        .badge-pink { background: #fce7f3; color: #be185d; border: 1px solid #fbcfe8; }
+        .stat-box { background: #f8fafc; border-radius: 12px; padding: 16px; text-align: center; }
+        .category-pill { background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 12px; font-size: 12px; color: #475569; font-weight: 500; }
+        .urgent-bar { background: linear-gradient(90deg, #fef3c7, #fffbeb); border: 1px solid #fde68a; border-radius: 10px; padding: 12px 16px; display: flex; align-items: center; gap: 8px; color: #b45309; font-size: 13px; font-weight: 600; }
+        .tab-btn { padding: 6px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; border: 1px solid #e2e8f0; background: white; color: #64748b; cursor: pointer; transition: all 0.2s; }
+        .tab-btn.active { background: #eff6ff; color: #3b82f6; border-color: #bfdbfe; }
+        .pulse-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.8); } }
+        .loading-shimmer { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .chart-container { position: relative; height: 280px; }
+        .today-badge { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; }
+
+        .filter-pill { padding: 8px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: 1px solid #e2e8f0; background: white; color: #64748b; }
+        .filter-pill.active { background: #ecfdf5; color: #059669; border-color: #a7f3d0; box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
+        .filter-pill:hover:not(.active) { background: #f8fafc; border-color: #cbd5e1; }
+        .search-input { background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #475569; width: 100%; outline: none; transition: all 0.2s; }
+        .search-input:focus { border-color: #3b82f6; background: white; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+        .search-input::placeholder { color: #94a3b8; }
+        .dropdown-select { background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #475569; outline: none; cursor: pointer; min-width: 140px; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+        .dropdown-select:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+        .issues-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        .issues-table th { padding: 12px 16px; text-align: left; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; background: #fafbfc; }
+        .issues-table td { padding: 14px 16px; font-size: 13px; color: #334155; border-bottom: 1px solid #f8fafc; }
+        .issues-table tr:hover td { background: #f8fafc; }
+        .kam-tag { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+        .kam-tag-rudra { background: #eff6ff; color: #1d4ed8; }
+        .kam-tag-rizvi { background: #fef2f2; color: #991b1b; }
+        .kam-tag-sohel { background: #f0fdf4; color: #166534; }
+        .kam-tag-hasib { background: #fff7ed; color: #9a3412; }
+        .kam-tag-jubayer { background: #f5f3ff; color: #6d28d9; }
+        .kam-tag-rahul { background: #ecfeff; color: #155e75; }
+        .kam-tag-abdul { background: #fdf2f8; color: #9d174d; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        .status-solved { background: #10b981; }
+        .status-pending { background: #f59e0b; }
+        .status-urgent { background: #f43f5e; }
+        .ops-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+        .ops-solved { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+        .ops-other { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+        .empty-state { padding: 60px 20px; text-align: center; color: #94a3b8; font-size: 14px; letter-spacing: 0.05em; }
+        .section-title { font-size: 12px; font-weight: 800; color: #10b981; letter-spacing: 0.15em; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
+        .section-title::before { content: ''; width: 14px; height: 14px; background: #fbbf24; border-radius: 2px; display: inline-block; }
+        .debug-bar { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; font-size: 11px; color: #64748b; font-family: monospace; }
+        .debug-bar span { margin-right: 12px; }
+        .debug-bar .ok { color: #059669; }
+        .debug-bar .err { color: #dc2626; }
+
+        .theme-toggle { position: relative; width: 52px; height: 28px; border-radius: 14px; background: #e2e8f0; cursor: pointer; transition: all 0.3s ease; border: 2px solid #cbd5e1; display: flex; align-items: center; padding: 2px; }
+        .theme-toggle.dark { background: #334155; border-color: #475569; }
+        .theme-toggle .toggle-knob { width: 22px; height: 22px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); box-shadow: 0 1px 3px rgba(0,0,0,0.15); font-size: 12px; }
+        .theme-toggle.dark .toggle-knob { transform: translateX(24px); background: #1e293b; }
+        .theme-toggle .sun-icon { display: block; }
+        .theme-toggle .moon-icon { display: none; }
+        .theme-toggle.dark .sun-icon { display: none; }
+        .theme-toggle.dark .moon-icon { display: block; }
+
+        .auth-overlay { position: fixed; inset: 0; background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .auth-box { background: white; border-radius: 20px; padding: 40px; width: 100%; max-width: 420px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); animation: authSlide 0.5s ease-out; }
+        @keyframes authSlide { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .auth-logo { width: 56px; height: 56px; border-radius: 14px; background: linear-gradient(135deg, #3b82f6, #2563eb); display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 24px; }
+        .auth-input { width: 100%; padding: 12px 16px; border-radius: 10px; border: 1.5px solid #e2e8f0; font-size: 14px; outline: none; transition: all 0.2s; background: #f8fafc; }
+        .auth-input:focus { border-color: #3b82f6; background: white; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+        .auth-btn { width: 100%; padding: 12px; border-radius: 10px; background: #3b82f6; color: white; font-weight: 700; font-size: 14px; border: none; cursor: pointer; transition: all 0.2s; }
+        .auth-btn:hover { background: #2563eb; }
+        .auth-btn:active { transform: scale(0.98); }
+        .auth-error { color: #dc2626; font-size: 13px; font-weight: 600; text-align: center; margin-top: 12px; display: none; }
+        .auth-remember { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #64748b; cursor: pointer; }
+        .auth-remember input { width: 16px; height: 16px; accent-color: #3b82f6; cursor: pointer; }
+
+        :root { --bg-body: #f0f4f8; --bg-card: #ffffff; --text-primary: #1e293b; --text-secondary: #64748b; --text-muted: #94a3b8; --border-color: #e2e8f0; --input-bg: #f1f5f9; --hover-bg: #f8fafc; --badge-bg: #f1f5f9; --stat-bg: #f8fafc; --urgent-bg: linear-gradient(90deg, #fef3c7, #fffbeb); --urgent-border: #fde68a; --urgent-text: #b45309; --table-header-bg: #fafbfc; --table-row-hover: #f8fafc; --debug-bg: #f8fafc; --tab-active-bg: #eff6ff; --tab-active-text: #3b82f6; --tab-active-border: #bfdbfe; --filter-active-bg: #ecfdf5; --filter-active-text: #059669; --filter-active-border: #a7f3d0; --today-bg: #ecfdf5; --today-text: #059669; --today-border: #a7f3d0; --modal-overlay: rgba(0,0,0,0.4); --header-bg: #ffffff; --header-border: #e2e8f0; --toggle-bg: #e2e8f0; --toggle-border: #cbd5e1; --toggle-knob: #ffffff; }
+        html.dark { --bg-body: #0f172a; --bg-card: #1e293b; --text-primary: #f1f5f9; --text-secondary: #94a3b8; --text-muted: #64748b; --border-color: #334155; --input-bg: #334155; --hover-bg: #334155; --badge-bg: #334155; --stat-bg: #1e293b; --urgent-bg: linear-gradient(90deg, #451a03, #78350f); --urgent-border: #92400e; --urgent-text: #fbbf24; --table-header-bg: #1e293b; --table-row-hover: #334155; --debug-bg: #1e293b; --tab-active-bg: #1e3a5f; --tab-active-text: #60a5fa; --tab-active-border: #3b82f6; --filter-active-bg: #064e3b; --filter-active-text: #34d399; --filter-active-border: #059669; --today-bg: #064e3b; --today-text: #34d399; --today-border: #059669; --modal-overlay: rgba(0,0,0,0.7); --header-bg: #1e293b; --header-border: #334155; --toggle-bg: #334155; --toggle-border: #475569; --toggle-knob: #1e293b; }
+
+        body { background: var(--bg-body); transition: background 0.3s ease; }
+        .card { background: var(--bg-card); transition: background 0.3s ease, border-color 0.3s ease; }
+        .summary-card { border-top: 4px solid; }
+        .text-slate-800 { color: var(--text-primary) !important; }
+        .text-slate-700 { color: var(--text-primary) !important; }
+        .text-slate-600 { color: var(--text-secondary) !important; }
+        .text-slate-500 { color: var(--text-muted) !important; }
+        .text-slate-400 { color: var(--text-muted) !important; }
+        .text-slate-300 { color: var(--text-muted) !important; }
+        .border-slate-200 { border-color: var(--border-color) !important; }
+        .border-slate-100 { border-color: var(--border-color) !important; }
+        .bg-slate-100 { background: var(--input-bg) !important; }
+        .bg-slate-50 { background: var(--input-bg) !important; }
+        .bg-white { background: var(--bg-card) !important; }
+        .search-input { background: var(--input-bg); border-color: var(--border-color); color: var(--text-secondary); }
+        .search-input:focus { background: var(--bg-card); }
+        .dropdown-select { background: var(--bg-card); border-color: var(--border-color); color: var(--text-secondary); }
+        .filter-pill { background: var(--bg-card); border-color: var(--border-color); color: var(--text-muted); }
+        .filter-pill.active { background: var(--filter-active-bg); color: var(--filter-active-text); border-color: var(--filter-active-border); }
+        .tab-btn { background: var(--bg-card); border-color: var(--border-color); color: var(--text-muted); }
+        .tab-btn.active { background: var(--tab-active-bg); color: var(--tab-active-text); border-color: var(--tab-active-border); }
+        .stat-box { background: var(--stat-bg); }
+        .category-pill { background: var(--badge-bg); border-color: var(--border-color); color: var(--text-secondary); }
+        .urgent-bar { background: var(--urgent-bg); border-color: var(--urgent-border); color: var(--urgent-text); }
+        .issues-table th { background: var(--table-header-bg); border-bottom-color: var(--border-color); color: var(--text-muted); }
+        .issues-table td { border-bottom-color: var(--border-color); color: var(--text-secondary); }
+        .issues-table tr:hover td { background: var(--table-row-hover); }
+        .debug-bar { background: var(--debug-bg); border-color: var(--border-color); }
+        .today-badge { background: var(--today-bg); color: var(--today-text); border-color: var(--today-border); }
+        .empty-state { color: var(--text-muted); }
+        header { background: var(--header-bg) !important; border-color: var(--header-border) !important; transition: background 0.3s ease, border-color 0.3s ease; }
+        #settingsModal > div:first-child { background: var(--modal-overlay); }
+        .theme-toggle { background: var(--toggle-bg); border-color: var(--toggle-border); }
+        .theme-toggle .toggle-knob { background: var(--toggle-knob); }
+
+        .page-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 36px; height: 36px; padding: 0 12px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-secondary); }
+        .page-btn:hover:not(:disabled) { background: var(--hover-bg); border-color: var(--text-muted); }
+        .page-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; box-shadow: 0 2px 8px rgba(59,130,246,0.3); }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .page-dots { display: inline-flex; align-items: center; justify-content: center; min-width: 36px; height: 36px; font-size: 13px; color: var(--text-muted); font-weight: 600; }
+
+        .mail-feedback-title { font-size: 11px; font-weight: 800; color: #8b5cf6; letter-spacing: 0.2em; text-transform: uppercase; display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+        .mail-feedback-title::before { content: ''; width: 14px; height: 14px; background: #a78bfa; border-radius: 2px; display: inline-block; }
+        .mf-card { background: white; border-radius: 16px; padding: 20px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04); transition: all 0.25s ease; }
+        .mf-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+        .mf-card-purple { border-top: 4px solid #8b5cf6; }
+        .mf-card-amber { border-top: 4px solid #f59e0b; }
+        .mf-card-green { border-top: 4px solid #10b981; }
+        .mf-card-pink { border-top: 4px solid #ec4899; }
+        .mf-card-label { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+        .mf-card-value { font-size: 32px; font-weight: 800; line-height: 1.2; }
+        .mf-card-value-purple { color: #8b5cf6; }
+        .mf-card-value-amber { color: #f59e0b; }
+        .mf-card-value-green { color: #10b981; }
+        .mf-card-value-pink { color: #ec4899; }
+        .mf-kam-card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04); border-left: 4px solid; transition: all 0.25s ease; }
+        .mf-kam-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+        .mf-kam-rudra { border-left-color: #3b82f6; }
+        .mf-kam-rizvi { border-left-color: #ef4444; }
+        .mf-kam-sohel { border-left-color: #10b981; }
+        .mf-kam-hasib { border-left-color: #f97316; }
+        .mf-kam-jubayer { border-left-color: #8b5cf6; }
+        .mf-kam-rahul { border-left-color: #06b6d4; }
+        .mf-kam-abdul { border-left-color: #ec4899; }
+        .mf-kam-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; color: white; flex-shrink: 0; }
+        .mf-kam-avatar-rudra { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .mf-kam-avatar-rizvi { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .mf-kam-avatar-sohel { background: linear-gradient(135deg, #10b981, #059669); }
+        .mf-kam-avatar-hasib { background: linear-gradient(135deg, #f97316, #ea580c); }
+        .mf-kam-avatar-jubayer { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+        .mf-kam-avatar-rahul { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+        .mf-kam-avatar-abdul { background: linear-gradient(135deg, #ec4899, #db2777); }
+        .mf-kam-name { font-size: 14px; font-weight: 700; color: #1e293b; }
+        .mf-kam-stat-box { background: #f8fafc; border-radius: 12px; padding: 16px 12px; text-align: center; flex: 1; }
+        .mf-kam-stat-value { font-size: 24px; font-weight: 800; line-height: 1; }
+        .mf-kam-stat-label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 6px; }
+        .mf-kam-ratio { font-size: 12px; font-weight: 600; color: #64748b; font-family: 'Courier New', monospace; }
+        .mf-kam-progress { height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden; margin-top: 8px; }
+        .mf-kam-progress-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+        .mf-kam-progress-rudra { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+        .mf-kam-progress-rizvi { background: linear-gradient(90deg, #ef4444, #f87171); }
+        .mf-kam-progress-sohel { background: linear-gradient(90deg, #10b981, #34d399); }
+        .mf-kam-progress-hasib { background: linear-gradient(90deg, #f97316, #fb923c); }
+        .mf-kam-progress-jubayer { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+        .mf-kam-progress-rahul { background: linear-gradient(90deg, #06b6d4, #22d3ee); }
+        .mf-kam-progress-abdul { background: linear-gradient(90deg, #ec4899, #f472b6); }
+        .mf-log-title { font-size: 11px; font-weight: 800; color: #64748b; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 16px; }
+        .mf-search { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #475569; width: 100%; outline: none; transition: all 0.2s; }
+        .mf-search:focus { border-color: #8b5cf6; background: white; box-shadow: 0 0 0 3px rgba(139,92,246,0.1); }
+        .mf-search::placeholder { color: #94a3b8; }
+        .mf-select { background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 32px 10px 14px; font-size: 13px; color: #475569; outline: none; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+        .mf-select:focus { border-color: #8b5cf6; box-shadow: 0 0 0 3px rgba(139,92,246,0.1); }
+        .mf-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        .mf-table th { padding: 12px 16px; text-align: left; font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid #f1f5f9; background: #fafbfc; white-space: nowrap; }
+        .mf-table td { padding: 14px 16px; font-size: 13px; color: #334155; border-bottom: 1px solid #f8fafc; vertical-align: top; }
+        .mf-table tr:hover td { background: #f8fafc; }
+        .mf-status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; }
+        .mf-status-solved { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+        .mf-status-pending { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+        .mf-status-urgent { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        .mf-gap { font-size: 12px; font-weight: 700; color: #ef4444; font-family: 'Courier New', monospace; }
+        .mf-gap-solved { color: #10b981; }
+        .mf-kam-tag { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+        .mf-kam-tag-rudra { background: #eff6ff; color: #1d4ed8; }
+        .mf-kam-tag-rizvi { background: #fef2f2; color: #991b1b; }
+        .mf-kam-tag-sohel { background: #f0fdf4; color: #166534; }
+        .mf-kam-tag-hasib { background: #fff7ed; color: #9a3412; }
+        .mf-kam-tag-jubayer { background: #f5f3ff; color: #6d28d9; }
+        .mf-kam-tag-rahul { background: #ecfeff; color: #155e75; }
+        .mf-kam-tag-abdul { background: #fdf2f8; color: #9d174d; }
+        .mf-empty { padding: 60px 20px; text-align: center; color: #94a3b8; font-size: 14px; }
+        .mf-empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.4; }
+        .mf-pagination-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 36px; height: 36px; padding: 0 12px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: 1px solid #e2e8f0; background: white; color: #64748b; }
+        .mf-pagination-btn:hover:not(:disabled) { background: #f8fafc; border-color: #cbd5e1; }
+        .mf-pagination-btn.active { background: #8b5cf6; color: white; border-color: #8b5cf6; box-shadow: 0 2px 8px rgba(139,92,246,0.3); }
+        .mf-pagination-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        html.dark .mf-card { background: var(--bg-card); }
+        html.dark .mf-kam-card { background: var(--bg-card); }
+        html.dark .mf-kam-stat-box { background: var(--stat-bg); }
+        html.dark .mf-kam-name { color: var(--text-primary); }
+        html.dark .mf-kam-ratio { color: var(--text-secondary); }
+        html.dark .mf-search { background: var(--input-bg); border-color: var(--border-color); color: var(--text-secondary); }
+        html.dark .mf-search:focus { background: var(--bg-card); }
+        html.dark .mf-select { background: var(--bg-card); border-color: var(--border-color); color: var(--text-secondary); }
+        html.dark .mf-table th { background: var(--table-header-bg); border-bottom-color: var(--border-color); color: var(--text-muted); }
+        html.dark .mf-table td { border-bottom-color: var(--border-color); color: var(--text-secondary); }
+        html.dark .mf-table tr:hover td { background: var(--table-row-hover); }
+        html.dark .mf-pagination-btn { background: var(--bg-card); border-color: var(--border-color); color: var(--text-secondary); }
+        html.dark .mf-pagination-btn:hover:not(:disabled) { background: var(--hover-bg); }
+        html.dark .mf-empty { color: var(--text-muted); }
+
+        .member-card-grid { display: grid; grid-template-columns: repeat(1, 1fr); gap: 16px; }
+        @media (min-width: 768px) { .member-card-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 1280px) { .member-card-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (min-width: 1536px) { .member-card-grid { grid-template-columns: repeat(4, 1fr); } }
+
+        .avatar-rudra { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .avatar-rizvi { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .avatar-sohel { background: linear-gradient(135deg, #10b981, #059669); }
+        .avatar-hasib { background: linear-gradient(135deg, #f97316, #ea580c); }
+        .avatar-jubayer { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+        .avatar-rahul { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+        .avatar-abdul { background: linear-gradient(135deg, #ec4899, #db2777); }
+    </style>
+<base target="_blank">
+</head>
+<body class="min-h-screen pb-10">
+
+    <!-- AUTHENTICATION OVERLAY -->
+    <div id="authOverlay" class="auth-overlay">
+        <div class="auth-box">
+            <div class="auth-logo">🚚</div>
+            <h2 class="text-xl font-bold text-slate-800 mb-1">Revenue Engine Issue Tracker</h2>
+            <p class="text-sm text-slate-500 mb-6">Authorized personnel only. Please sign in to continue.</p>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Username</label>
+                    <input type="text" id="authUser" class="auth-input" placeholder="Enter username" autocomplete="off">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Password</label>
+                    <div style="position: relative;">
+                        <input type="password" id="authPass" class="auth-input" style="padding-right: 40px;" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()">
+                        <button type="button" onclick="togglePassword()" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); z-index: 10; cursor: pointer; background: none; border: none; padding: 0;" title="Show/Hide Password">
+                            <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            <svg id="eyeOffIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between">
+                    <label class="auth-remember">
+                        <input type="checkbox" id="authRemember">
+                        <span>Keep me signed in</span>
+                    </label>
+                </div>
+                <button onclick="doLogin()" class="auth-btn">Sign In</button>
+                <div id="authError" class="auth-error">Invalid username or password</div>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-slate-100 text-center">
+                <p class="text-xs text-slate-400">© Carrybee Operations — Revenue Engine</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- DASHBOARD (hidden until auth) -->
+    <div id="appContent" style="display:none">
+        <!-- Header -->
+        <header class="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">🚚</div>
+                    <div>
+                        <h1 class="text-lg font-bold text-slate-800 tracking-wide" style="letter-spacing: 0.15em; font-size: 13px;">REVENUE ENGINE ISSUE TRACKER</h1>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <span class="pulse-dot"></span>
+                        <span id="lastUpdate" class="text-xs text-slate-500 font-medium">Loading...</span>
+                    </div>
+                    <button onclick="refreshAll()" id="refreshBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-2">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        Refresh
+                    </button>
+                    <button onclick="openSettings()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-lg transition-colors">
+                        ⚙️ Settings
+                    </button>
+                    <button onclick="doLogout()" class="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                        Logout
+                    </button>
+                    <button id="adminBtn" onclick="openAdminPanel()" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 text-xs font-semibold rounded-lg transition-colors hidden flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        Manage Users
+                    </button>
+
+                    <!-- Dark Mode Toggle -->
+                    <div class="theme-toggle" id="themeToggle" onclick="toggleDarkMode()" title="Toggle Dark Mode">
+                        <div class="toggle-knob">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="max-w-7xl mx-auto mt-2">
+                <div id="debugBar" class="debug-bar hidden"></div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-6 py-6 space-y-6">
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4" id="summaryCards">
+                <div class="card summary-card border-blue p-5 card-hover">
+                    <div class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-2">Total Issues</div>
+                    <div class="loading-shimmer h-10 w-20"></div>
+                </div>
+                <div class="card summary-card border-green p-5 card-hover">
+                    <div class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-2">Solved</div>
+                    <div class="loading-shimmer h-10 w-20"></div>
+                </div>
+                <div class="card summary-card border-amber p-5 card-hover">
+                    <div class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-2">Solve Ratio</div>
+                    <div class="loading-shimmer h-10 w-20"></div>
+                </div>
+                <div class="card summary-card border-purple p-5 card-hover">
+                    <div class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-2">IR Mails</div>
+                    <div class="loading-shimmer h-10 w-20"></div>
+                </div>
+                <div class="card summary-card border-rose p-5 card-hover">
+                    <div class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-2">Urgent</div>
+                    <div class="loading-shimmer h-10 w-20"></div>
+                </div>
+            </div>
+
+            <!-- Member Cards -->
+            <div class="member-card-grid" id="memberCards"></div>
+
+            <!-- Issues by Category Chart -->
+            <div class="card p-6">
+                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Issues by Category</h3>
+                <div class="chart-container"><canvas id="categoryChart"></canvas></div>
+            </div>
+
+            <!-- Daily Issues Chart -->
+            <div class="card p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Daily Issues — Last 7D</h3>
+                        <span class="today-badge" id="todayCount">TODAY: 0</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="tab-btn active" onclick="setPeriod('7d', this)">7D</button>
+                        <button class="tab-btn" onclick="setPeriod('30d', this)">30D</button>
+                        <button class="tab-btn" onclick="setPeriod('all', this)">ALL</button>
+                        <button class="tab-btn" onclick="setPeriod('member', this)">PER MEMBER</button>
+                    </div>
+                </div>
+                <div class="chart-container"><canvas id="dailyChart"></canvas></div>
+            </div>
+
+            <!-- MAIL FEEDBACK TRACKER SECTION -->
+            <div class="card p-6" id="mailFeedbackSection">
+                <div class="mail-feedback-title">Mail Feedback Tracker</div>
+
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="mf-card mf-card-purple">
+                        <div class="mf-card-label">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 7L2 7"/></svg>
+                            Total Raised
+                        </div>
+                        <div class="mf-card-value mf-card-value-purple" id="mfTotalRaised">0</div>
+                    </div>
+                    <div class="mf-card mf-card-amber">
+                        <div class="mf-card-label">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                            Pending
+                        </div>
+                        <div class="mf-card-value mf-card-value-amber" id="mfPending">0</div>
+                    </div>
+                    <div class="mf-card mf-card-green">
+                        <div class="mf-card-label">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            Solved
+                        </div>
+                        <div class="mf-card-value mf-card-value-green" id="mfSolved">0</div>
+                    </div>
+                    <div class="mf-card mf-card-pink">
+                        <div class="mf-card-label">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+                            Solve Ratio
+                        </div>
+                        <div class="mf-card-value mf-card-value-pink" id="mfSolveRatio">0%</div>
+                    </div>
+                </div>
+
+                <!-- Member Cards -->
+                <div class="member-card-grid mb-6" id="mfMemberCards"></div>
+
+                <!-- Mail Log -->
+                <div>
+                    <div class="mf-log-title">Mail Log</div>
+                    <div class="flex flex-col lg:flex-row gap-3 mb-4">
+                        <div class="flex-1">
+                            <input type="text" id="mfSearchInput" placeholder="Search mail subject..." class="mf-search" oninput="applyMFFilters()">
+                        </div>
+                        <div class="flex gap-2">
+                            <select id="mfStatusFilter" class="mf-select" onchange="applyMFFilters()">
+                                <option value="all">All mails</option>
+                                <option value="solved">Solved</option>
+                                <option value="pending">Pending</option>
+                                <option value="urgent">Urgent</option>
+                            </select>
+                            <select id="mfKAMFilter" class="mf-select" onchange="applyMFFilters()">
+                                <option value="all">All members</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="mf-table" id="mfTable">
+                            <thead>
+                                <tr>
+                                    <th style="width:40px">#</th>
+                                    <th>Date</th>
+                                    <th>KAM</th>
+                                    <th>Mail Subject</th>
+                                    <th>Status</th>
+                                    <th>Solved Date</th>
+                                    <th>Resolution Gap</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mfTableBody">
+                                <tr><td colspan="100" class="mf-empty">
+                                    <div class="mf-empty-icon">📭</div>
+                                    <div>No mail feedback found.</div>
+                                </td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
+                        <span class="text-xs text-slate-400" id="mfShowingText">Showing 0 of 0 mails</span>
+                        <div class="flex gap-2" id="mfPagination"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ISSUES LOG SECTION -->
+            <div class="card p-6">
+                <div class="section-title mb-5">Issues Log</div>
+
+                <!-- Filters Row -->
+                <div class="flex flex-col lg:flex-row gap-3 mb-4">
+                    <div class="flex-1">
+                        <input type="text" id="searchInput" placeholder="Search consignment, details, category..." class="search-input" oninput="applyFilters()">
+                    </div>
+                    <div class="flex gap-2 flex-wrap">
+                        <select id="dateFilter" class="dropdown-select" onchange="applyFilters()">
+                            <option value="all">All dates</option>
+                            <option value="today">Today</option>
+                            <option value="week">This week</option>
+                            <option value="month">This month</option>
+                        </select>
+                        <select id="categoryFilter" class="dropdown-select" onchange="applyFilters()">
+                            <option value="all">All categories</option>
+                        </select>
+                        <select id="kamFilter" class="dropdown-select" onchange="applyFilters()">
+                            <option value="all">All Members</option>
+                        </select>
+                        <select id="sheetFilter" class="dropdown-select" onchange="applyFilters()">
+                            <option value="all">All Tabs</option>
+                            <option value="Sheet 1">ISD</option>
+                            <option value="Sheet 2">OSD</option>
+                            <option value="Sheet 3">Central</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Filter Pills -->
+                <div class="flex gap-2 mb-4 flex-wrap" id="filterPills"></div>
+
+                <!-- Table -->
+                <div class="overflow-x-auto">
+                    <table class="issues-table" id="issuesTable">
+                        <thead>
+                            <tr id="tableHeader">
+                                <th>Loading...</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <tr><td colspan="100" class="empty-state">Loading data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="tableFooter" class="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
+                    <span class="text-xs text-slate-400" id="showingText">Showing 0 of 0 issues</span>
+                    <div class="flex gap-2" id="pagination"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+
+    <!-- Admin Panel Modal -->
+    <div id="adminModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl" style="max-height: 80vh; overflow-y: auto;">
+            <h3 class="text-lg font-bold text-slate-800 mb-1">User Management</h3>
+            <p class="text-sm text-slate-500 mb-5">Add or remove authorized users. Only admins can access this panel.</p>
+
+            <div class="bg-slate-50 rounded-xl p-4 mb-5">
+                <h4 class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-3">Add New User</h4>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Username</label>
+                        <input type="text" id="newUserName" class="auth-input" placeholder="e.g. john" autocomplete="off">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Password</label>
+                        <input type="text" id="newUserPass" class="auth-input" placeholder="Enter password" autocomplete="off">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Role</label>
+                        <select id="newUserRole" class="dropdown-select w-full">
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <button onclick="addNewUser()" class="auth-btn">Add User</button>
+                    <div id="adminError" class="auth-error" style="display:none"></div>
+                </div>
+            </div>
+
+            <div>
+                <h4 class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-3">Active Users</h4>
+                <div id="usersList" class="space-y-2"></div>
+            </div>
+
+            <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
+                <button onclick="closeAdminPanel()" class="px-4 py-2 text-sm text-slate-500 hover:text-slate-800 font-medium transition-colors">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl">
+            <h3 class="text-lg font-bold text-slate-800 mb-1">Column Settings</h3>
+            <p class="text-sm text-slate-500 mb-5">Map your sheet columns to dashboard fields</p>
+            <div id="settingsContent" class="space-y-4 mb-6"></div>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeSettings()" class="px-4 py-2 text-sm text-slate-500 hover:text-slate-800 font-medium transition-colors">Cancel</button>
+                <button onclick="saveSettings()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors">Save & Reload</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+                if (d._solved) { statusClass = 'mf-status-solved'; statusText = 'Solved'; statusIcon = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'; }
+                else if (d._urgent) { statusClass = 'mf-status-urgent'; statusText = 'Urgent'; statusIcon = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>'; }
+                const member = TEAM_MEMBERS.find(m => m.name === d._kam);
+                const kamClass = member ? 'mf-kam-tag-' + member.key : 'mf-kam-tag-rudra';
+                const kamInitials = member ? member.initials : '??';
+                const kamShort = member ? member.name.split(' ').slice(0, 2).join(' ') : d._kam;
+                const dateStr = d._date ? d._date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' }) : (d._dateRaw || '-');
+                let subject = d._raw['Mail Subject Line'] || d._raw['Mail Subject'] || d._raw['Subject'] || d._raw['Issue'] || d._raw['Issue Details'] || d._category || '-';
+                if (subject === '-') subject = d._raw[COL_MAP.details || ''] || d._category || '-';
+                let solvedDateStr = '-';
+                let solvedDateObj = null;
+                if (d._solved) {
+                    const possibleSolvedCols = ['Slove date', 'Solved Date', 'Resolved Date', 'Closed Date', 'Date Solved', 'Completion Date'];
+                    for (let col of possibleSolvedCols) {
+                        if (d._raw[col]) {
+                            const parsed = parseDateRobust(d._raw[col]);
+                            if (parsed) { solvedDateObj = parsed; solvedDateStr = parsed.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' }); break; }
+                        }
+                    }
+                    if (solvedDateStr === '-') { solvedDateStr = '<span style="color: #94a3b8; font-style: italic;">—</span>'; }
+                }
+                const gap = getResolutionGap(d._date, solvedDateObj, d._solved);
+                const gapClass = d._solved ? 'mf-gap-solved' : 'mf-gap';
+                return '<tr>' +
+                    '<td><span class="text-xs text-slate-400">' + (start + idx + 1) + '</span></td>' +
+                    '<td><span class="text-xs text-slate-600">' + dateStr + '</span></td>' +
+                    '<td><span class="mf-kam-tag ' + kamClass + '"><span style="width:18px;height:18px;border-radius:50%;background:' + (member ? member.color : '#3b82f6') + ';color:white;font-size:9px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;">' + kamInitials + '</span>' + kamShort + '</span></td>' +
+                    '<td><span class="text-xs text-slate-700 font-medium">' + subject + '</span></td>' +
+                    '<td><span class="mf-status-badge ' + statusClass + '">' + statusIcon + statusText + '</span></td>' +
+                    '<td><span class="text-xs text-slate-500">' + solvedDateStr + '</span></td>' +
+                    '<td><span class="mf-gap ' + gapClass + '">' + gap + '</span></td>' +
+                '</tr>';
+            }).join('');
+            tbody.innerHTML = bodyHTML;
+            document.getElementById('mfShowingText').textContent = 'Showing ' + (start + 1) + '-' + end + ' of ' + mfFilteredData.length + ' mails';
+            const totalPages = Math.ceil(mfFilteredData.length / MF_PAGE_SIZE);
+            let pagHTML = '';
+            if (totalPages > 1) {
+                pagHTML += '<button onclick="changeMFPage(' + (mfCurrentPage - 1) + ')" ' + (mfCurrentPage === 1 ? 'disabled' : '') + ' class="mf-pagination-btn" style="' + (mfCurrentPage === 1 ? 'opacity:0.4;cursor:not-allowed;' : '') + '">Prev</button>';
+                for (let i = 1; i <= totalPages; i++) {
+                    if (i === 1 || i === totalPages || (i >= mfCurrentPage - 1 && i <= mfCurrentPage + 1)) {
+                        pagHTML += '<button onclick="changeMFPage(' + i + ')" class="mf-pagination-btn ' + (i === mfCurrentPage ? 'active' : '') + '">' + i + '</button>';
+                    } else if (i === mfCurrentPage - 2 || i === mfCurrentPage + 2) {
+                        pagHTML += '<span class="px-2 text-xs text-slate-400">...</span>';
+                    }
+                }
+                pagHTML += '<button onclick="changeMFPage(' + (mfCurrentPage + 1) + ')" ' + (mfCurrentPage === totalPages ? 'disabled' : '') + ' class="mf-pagination-btn" style="' + (mfCurrentPage === totalPages ? 'opacity:0.4;cursor:not-allowed;' : '') + '">Next</button>';
+            }
+            document.getElementById('mfPagination').innerHTML = pagHTML;
+        }
+
+        function changeMFPage(page) {
+            const totalPages = Math.ceil(mfFilteredData.length / MF_PAGE_SIZE);
+            if (page < 1 || page > totalPages) return;
+            mfCurrentPage = page;
+            renderMFTable();
+        }
+
+        // ===================== INIT =====================
+        initTheme();
+        initFilterPills();
+        if (!checkAuth()) {
+            document.getElementById('authUser').focus();
+        }
+    </script>
+</body>
+</html>
