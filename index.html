@@ -138,7 +138,9 @@
         .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .page-dots { display: inline-flex; align-items: center; justify-content: center; min-width: 36px; height: 36px; font-size: 13px; color: var(--text-muted); font-weight: 600; }
 
-                .member-card-grid { display: grid; grid-template-columns: repeat(1, 1fr); gap: 16px; }
+        
+
+        .member-card-grid { display: grid; grid-template-columns: repeat(1, 1fr); gap: 16px; }
         @media (min-width: 768px) { .member-card-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (min-width: 1280px) { .member-card-grid { grid-template-columns: repeat(3, 1fr); } }
         @media (min-width: 1536px) { .member-card-grid { grid-template-columns: repeat(4, 1fr); } }
@@ -152,9 +154,6 @@
         .avatar-abdul { background: linear-gradient(135deg, #ec4899, #db2777); }
     </style>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.0-fixed-urls-2026-06-24">
-    <script>console.log('Dashboard Version: v2.0 - URLs Fixed');</script>
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚚</text></svg>">
@@ -209,7 +208,7 @@
                 <div class="flex items-center gap-3">
                     <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">🚚</div>
                     <div>
-                        <h1 class="text-lg font-bold text-slate-800 tracking-wide" style="letter-spacing: 0.15em; font-size: 13px;">REVENUE ENGINE ISSUE TRACKER <span style="color:#10b981;font-size:10px;">v2.0</span></h1>
+                        <h1 class="text-lg font-bold text-slate-800 tracking-wide" style="letter-spacing: 0.15em; font-size: 13px;">REVENUE ENGINE ISSUE TRACKER</h1>
                     </div>
                 </div>
                 <div class="flex items-center gap-4">
@@ -412,9 +411,9 @@
 
         // ===================== CONFIG =====================
         const TEAM_MEMBERS = [
-            { name: 'Raian Islam Rudra', key: 'rudra', initials: 'RU', color: '#3b82f6', id: 'CL-86045', designation: 'Senior Executive and leader', email: 'raian.rudra@carrybee.com' },
+            { name: 'Raian Islam Rudra', key: 'rudra', initials: 'RU', color: '#3b82f6', id: 'CL-86045', designation: 'Senior Executive', email: 'raian.rudra@carrybee.com' },
             { name: 'Rizvi Ahmed Chowdhury', key: 'rizvi', initials: 'RZ', color: '#ef4444', id: 'CL-84119', designation: 'Associate', email: 'rizvi.chy@carrybee.com' },
-            { name: 'MD Sohel Rana', key: 'sohel', initials: 'SH', color: '#10b981', id: 'CL-86023', designation: 'Executive', email: '' },
+            { name: 'MD Sohel Rana', key: 'sohel', initials: 'SH', color: '#10b981', id: 'CL-86023', designation: 'Executive', email: 'sohel.rana@carrybee.com' },
             { name: 'Hasib Islam', key: 'hasib', initials: 'HS', color: '#f97316', id: 'CL-86024', designation: 'Executive', email: 'hasib.islam@carrybee.com' },
             { name: 'Jubayer Rahman', key: 'jubayer', initials: 'JU', color: '#8b5cf6', id: 'CL-86113', designation: 'Executive', email: 'jubayer.rahman@carrybee.com' },
             { name: 'Rahul Roy', key: 'rahul', initials: 'RH', color: '#06b6d4', id: 'CL-84020', designation: 'Associate', email: 'rahul.roy@carrybee.com' },
@@ -427,9 +426,9 @@
         ];
 
         const CSV_URLS = [
-            'https://docs.google.com/spreadsheets/d/e/2PACX-1vRsO79-0XIgKVkMKaIPjkBCp-npePr9WxH8LCX3jcPslWC4PlP4Qsa0qalr6FQuBZGmPsiLnkt2uv2S/pub?output=csv',  // OSD
-            'https://docs.google.com/spreadsheets/d/e/2PACX-1vRvcHh_-szyOevlR4V86qiagypaMcBaF-ikwfeMJ-vamXKQBH7jWaIrmajn9VdgE5xm78RN_L30O5_s/pub?output=csv', // Central
-            'https://docs.google.com/spreadsheets/d/e/2PACX-1vSAVNwzXLfSVFu4psJlhz7pqMKtEocVNUKChUbpRaFoXVxSric-zuGESs7GyT0R6DO_sF76RE951c3B/pub?output=csv'   // ISD
+            'https://docs.google.com/spreadsheets/d/e/2PACX-1vQd_example_ISD/pub?output=csv',
+            'https://docs.google.com/spreadsheets/d/e/2PACX-1vQd_example_OSD/pub?output=csv',
+            'https://docs.google.com/spreadsheets/d/e/2PACX-1vQd_example_Central/pub?output=csv'
         ];
 
         
@@ -685,7 +684,31 @@
             renderDailyChart();
         }
 
-                function detectColumns() {
+        async function loadMFData() {
+            const rows = await fetchCSV(MF_CSV_URL);
+            mfData = rows.map(r => {
+                const date = parseDateRobust(r['Date'] || r['date'] || r['Date Raised'] || r['Raised Date']);
+                const solved = (r['Status'] || r['status'] || '').toString().toLowerCase().includes('solved') ||
+                               (r['Status'] || r['status'] || '').toString().toLowerCase().includes('resolved') ||
+                               (r['Slove date'] || r['Solved Date'] || r['Resolved Date'] || '');
+                const urgent = (r['Status'] || r['status'] || '').toString().toLowerCase().includes('urgent');
+                const kam = r['KAM'] || r['kam'] || r['Member'] || r['member'] || r['Assignee'] || 'Rudra';
+                return {
+                    _raw: r,
+                    _date: date,
+                    _dateRaw: r['Date'] || r['date'] || r['Date Raised'] || r['Raised Date'],
+                    _solved: !!solved,
+                    _urgent: urgent,
+                    _kam: kam,
+                    _category: r['Category'] || r['category'] || r['Issue Type'] || 'General'
+                };
+            });
+            applyMFFilters();
+            renderMFSummary();
+            renderMFMemberCards();
+        }
+
+        function detectColumns() {
             if (!allData.length) return;
             const first = allData[0];
             const cols = Object.keys(first);
@@ -703,9 +726,8 @@
                 sheet: '_sheet'
             };
 
-            categories = [...new Set(allData.map(r => r[COL_MAP.category || 'Category'] || 'Uncategorized').filter(Boolean))];
+            categories = [...new Set(allData.map(r => r[COL_MAP.category || 'Issue Category'] || 'Uncategorized').filter(Boolean))];
 
-            // Debug column detection
             console.log('Detected columns:', COL_MAP);
             console.log('Available columns:', cols);
             console.log('Total rows:', allData.length);
@@ -713,35 +735,40 @@
 
         function processData() {
             allData.forEach(r => {
-                r._date = parseDateRobust(r[COL_MAP.date || 'Date']);
-                r._solved = !!(r[COL_MAP.solved || 'Slove date'] || r['Solved Date'] || r['Resolved Date']);
-                r._urgent = (r[COL_MAP.status || 'Status'] || '').toString().toLowerCase().includes('urgent');
+                r._date = parseDateRobust(r[COL_MAP.date || 'Timestamp']);
 
-                // KAM matching: try email first, then name, then default to Rudra
-                let kamValue = r[COL_MAP.kam || 'KAM'] || '';
-                let matchedMember = null;
+                const feedbackStatus = (r[COL_MAP.solved || 'KAM Feedback Status'] || '').toString().toLowerCase().trim();
+                const issueStatus = (r[COL_MAP.status || 'Issue Status'] || '').toString().toLowerCase().trim();
+                r._solved = feedbackStatus === 'solved' || feedbackStatus.includes('solved') || 
+                           feedbackStatus === 'resolved' || feedbackStatus.includes('resolved') ||
+                           feedbackStatus === 'done' || feedbackStatus === 'closed' ||
+                           issueStatus === 'solved' || issueStatus.includes('solved');
 
-                if (kamValue) {
-                    const kamLower = kamValue.toString().toLowerCase().trim();
-                    // Try email match first
-                    matchedMember = TEAM_MEMBERS.find(m => m.email && kamLower === m.email.toLowerCase());
-                    // Then try name match (first name, last name, or full name)
-                    if (!matchedMember) {
-                        matchedMember = TEAM_MEMBERS.find(m => {
-                            const nameLower = m.name.toLowerCase();
-                            const parts = nameLower.split(' ');
-                            return kamLower === nameLower || 
-                                   parts.some(p => kamLower === p) ||
-                                   kamLower.includes(parts[0]) ||
-                                   (parts.length > 1 && kamLower.includes(parts[parts.length-1]));
-                        });
-                    }
+                r._urgent = issueStatus === 'urgent' || issueStatus.includes('urgent') ||
+                           issueStatus === 'high' || issueStatus.includes('high') ||
+                           (r['Priority Scale'] || '').toString().toLowerCase().includes('urgent');
+
+                // ONLY match the 7 team members by email
+                let kamValue = r[COL_MAP.kam || 'Email Address'] || r['KAM Name'] || '';
+                kamValue = kamValue.toString().trim().toLowerCase();
+
+                let matchedMember = TEAM_MEMBERS.find(m => m.email && kamValue === m.email.toLowerCase());
+
+                if (matchedMember) {
+                    r._kam = matchedMember.name;
+                    r._kamKey = matchedMember.key;
+                    r._kamMatched = true;
+                } else {
+                    r._kam = null;  // Mark as not belonging to team
+                    r._kamKey = null;
+                    r._kamMatched = false;
                 }
 
-                r._kam = matchedMember ? matchedMember.name : (kamValue || 'Raian Islam Rudra');
-                r._kamKey = matchedMember ? matchedMember.key : 'rudra';
-                r._category = r[COL_MAP.category || 'Category'] || 'Uncategorized';
+                r._category = r[COL_MAP.category || 'Issue Category'] || 'Uncategorized';
             });
+
+            // Filter out non-team members
+            allData = allData.filter(r => r._kamMatched);
         }
 
         // ===================== RENDER =====================
@@ -750,31 +777,29 @@
             const solved = allData.filter(r => r._solved).length;
             const ratio = total ? Math.round((solved / total) * 100) : 0;
             const urgent = allData.filter(r => r._urgent && !r._solved).length;
-            const irMails = allData.filter(r => (r._category || '').toString().toLowerCase().includes('ir') ||
-                                                (r[COL_MAP.details || ''] || '').toString().toLowerCase().includes('mail')).length;
+            const pending = total - solved;
 
             const cards = [
                 { label: 'Total Issues', value: total, color: 'border-blue', text: 'text-blue-600' },
                 { label: 'Solved', value: solved, color: 'border-green', text: 'text-emerald-600' },
                 { label: 'Solve Ratio', value: ratio + '%', color: 'border-amber', text: 'text-amber-600' },
-                { label: 'IR Mails', value: irMails, color: 'border-purple', text: 'text-purple-600' },
+                { label: 'Pending', value: pending, color: 'border-purple', text: 'text-purple-600' },
                 { label: 'Urgent', value: urgent, color: 'border-rose', text: 'text-rose-600' }
             ];
 
-            document.getElementById('summaryCards').innerHTML = cards.map(c => `
-                <div class="card summary-card ${c.color} p-5 card-hover fade-in">
-                    <div class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-2">${c.label}</div>
-                    <div class="text-3xl font-extrabold ${c.text}">${c.value}</div>
-                </div>
-            `).join('');
+            document.getElementById('summaryCards').innerHTML = cards.map(c => 
+                '<div class="card summary-card ' + c.color + ' p-5 card-hover fade-in">' +
+                    '<div class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-2">' + c.label + '</div>' +
+                    '<div class="text-3xl font-extrabold ' + c.text + '">' + c.value + '</div>' +
+                '</div>'
+            ).join('');
         }
 
         function renderMemberCards() {
             const container = document.getElementById('memberCards');
+
             const cards = TEAM_MEMBERS.map(m => {
-                const memberData = allData.filter(r => r._kamKey === m.key || 
-                    (r._kam && r._kam.toString().toLowerCase().includes(m.name.toLowerCase())) ||
-                    (r._kam && m.email && r._kam.toString().toLowerCase() === m.email.toLowerCase()));
+                const memberData = allData.filter(r => r._kamKey === m.key);
                 const total = memberData.length;
                 const solved = memberData.filter(r => r._solved).length;
                 const pending = total - solved;
@@ -782,40 +807,39 @@
                 const urgent = memberData.filter(r => r._urgent && !r._solved).length;
                 const today = memberData.filter(r => isToday(r._date)).length;
 
-                return `
-                <div class="card p-5 card-hover fade-in">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="avatar avatar-${m.key}">${m.initials}</div>
-                        <div>
-                            <div class="font-bold text-slate-800">${m.name}</div>
-                            <div class="text-xs text-slate-500 font-semibold">${m.id || ''}</div>
-                            <div class="text-xs text-slate-400">${m.designation || 'KAM Member'}</div>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-3 gap-2 mb-3">
-                        <div class="stat-box">
-                            <div class="text-xl font-extrabold text-slate-800">${total}</div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Total</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="text-xl font-extrabold text-emerald-600">${solved}</div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Solved</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="text-xl font-extrabold text-amber-600">${pending}</div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Pending</div>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between text-xs mb-1">
-                        <span class="text-slate-500 font-medium">Solve Rate</span>
-                        <span class="font-bold text-slate-700">${ratio}%</span>
-                    </div>
-                    <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                        <div class="h-full rounded-full" style="width: ${ratio}%; background: linear-gradient(90deg, ${m.color}, ${m.color}aa);"></div>
-                    </div>
-                    ${urgent > 0 ? `<div class="urgent-bar mt-3"><span>⚠️</span> ${urgent} urgent issue${urgent > 1 ? 's' : ''} pending</div>` : ''}
-                    ${today > 0 ? `<div class="mt-2 text-xs text-slate-500"><span class="today-badge">${today} today</span></div>` : ''}
-                </div>`;
+                return '<div class="card p-5 card-hover fade-in">' +
+                    '<div class="flex items-center gap-3 mb-4">' +
+                        '<div class="avatar avatar-' + m.key + '">' + m.initials + '</div>' +
+                        '<div>' +
+                            '<div class="font-bold text-slate-800">' + m.name + '</div>' +
+                            '<div class="text-xs text-slate-500 font-semibold">' + m.id + '</div>' +
+                            '<div class="text-xs text-slate-400">' + m.designation + '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="grid grid-cols-3 gap-2 mb-3">' +
+                        '<div class="stat-box">' +
+                            '<div class="text-xl font-extrabold text-slate-800">' + total + '</div>' +
+                            '<div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Total</div>' +
+                        '</div>' +
+                        '<div class="stat-box">' +
+                            '<div class="text-xl font-extrabold text-emerald-600">' + solved + '</div>' +
+                            '<div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Solved</div>' +
+                        '</div>' +
+                        '<div class="stat-box">' +
+                            '<div class="text-xl font-extrabold text-amber-600">' + pending + '</div>' +
+                            '<div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Pending</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="flex items-center justify-between text-xs mb-1">' +
+                        '<span class="text-slate-500 font-medium">Solve Rate</span>' +
+                        '<span class="font-bold text-slate-700">' + ratio + '%</span>' +
+                    '</div>' +
+                    '<div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">' +
+                        '<div class="h-full rounded-full" style="width: ' + ratio + '%; background: linear-gradient(90deg, ' + m.color + ', ' + m.color + 'aa);"></div>' +
+                    '</div>' +
+                    (urgent > 0 ? '<div class="urgent-bar mt-3"><span>⚠️</span> ' + urgent + ' urgent issue' + (urgent > 1 ? 's' : '') + ' pending</div>' : '') +
+                    (today > 0 ? '<div class="mt-2 text-xs text-slate-500"><span class="today-badge">' + today + ' today</span></div>' : '') +
+                '</div>';
             }).join('');
             container.innerHTML = cards;
         }
@@ -955,6 +979,9 @@
             const kamSelect = document.getElementById('kamFilter');
             const kams = [...new Set(allData.map(r => r._kam).filter(Boolean))];
             kamSelect.innerHTML = '<option value="all">All Members</option>' + kams.map(k => `<option value="${k}">${k}</option>`).join('');
+
+            const mfKamSelect = document.getElementById('mfKAMFilter');
+            mfKamSelect.innerHTML = '<option value="all">All members</option>' + TEAM_MEMBERS.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
         }
 
         function initFilterPills() {
@@ -1029,56 +1056,54 @@
                 return;
             }
 
-            thead.innerHTML = `
-                <th>#</th>
-                <th>Date</th>
-                <th>Consignment</th>
-                <th>Category</th>
-                <th>Details</th>
-                <th>KAM</th>
-                <th>Status</th>
-                <th>Sheet</th>
-            `;
+            thead.innerHTML = '<th>#</th><th>Date</th><th>Consignment</th><th>Category</th><th>Details</th><th>KAM</th><th>Status</th><th>Sheet</th>';
 
             const start = (currentPage - 1) * PAGE_SIZE;
             const end = Math.min(start + PAGE_SIZE, filteredData.length);
             const pageData = filteredData.slice(start, end);
 
             tbody.innerHTML = pageData.map((r, i) => {
-                const status = r._solved ? '<span class="ops-badge ops-solved">✓ Solved</span>' :
-                               r._urgent ? '<span class="ops-badge" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;">⚠ Urgent</span>' :
-                               '<span class="ops-badge ops-other">Pending</span>';
-                const member = TEAM_MEMBERS.find(m => r._kamKey === m.key || 
-                    (r._kam && r._kam.toString().toLowerCase().includes(m.name.toLowerCase())));
-                const kamClass = member ? 'kam-tag-' + member.key : 'kam-tag-rudra';
-                const kamInitials = member ? member.initials : '??';
+                let statusBadge = '';
+                if (r._solved) {
+                    statusBadge = '<span class="ops-badge ops-solved">✓ Solved</span>';
+                } else if (r._urgent) {
+                    statusBadge = '<span class="ops-badge" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;">⚠ Urgent</span>';
+                } else {
+                    statusBadge = '<span class="ops-badge ops-other">Pending</span>';
+                }
 
-                return `<tr>
-                    <td><span class="text-xs text-slate-400">${start + i + 1}</span></td>
-                    <td><span class="text-xs text-slate-600">${formatDate(r._date)}</span></td>
-                    <td><span class="font-mono text-xs font-semibold text-slate-700">${r[COL_MAP.consignment || 'Consignment'] || '-'}</span></td>
-                    <td><span class="category-pill">${r._category}</span></td>
-                    <td><span class="text-xs text-slate-700 max-w-xs truncate block">${r[COL_MAP.details || 'Issue Details'] || '-'}</span></td>
-                    <td><span class="kam-tag ${kamClass}"><span style="width:18px;height:18px;border-radius:50%;background:${member ? member.color : '#3b82f6'};color:white;font-size:9px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;">${kamInitials}</span>${r._kam}</span></td>
-                    <td>${status}</td>
-                    <td><span class="text-xs text-slate-500">${r._sheet || '-'}</span></td>
-                </tr>`;
+                const member = TEAM_MEMBERS.find(m => r._kamKey === m.key);
+                const kamName = member ? member.name : (r._kam || 'Unknown');
+                const kamInitials = member ? member.initials : '??';
+                const kamColor = member ? member.color : '#3b82f6';
+                const kamClass = member ? 'kam-tag-' + member.key : 'kam-tag-rudra';
+
+                return '<tr>' +
+                    '<td><span class="text-xs text-slate-400">' + (start + i + 1) + '</span></td>' +
+                    '<td><span class="text-xs text-slate-600">' + formatDate(r._date) + '</span></td>' +
+                    '<td><span class="font-mono text-xs font-semibold text-slate-700">' + (r[COL_MAP.consignment || 'Consignment ID/Merchant Name (Which one is Applicable)'] || '-') + '</span></td>' +
+                    '<td><span class="category-pill">' + r._category + '</span></td>' +
+                    '<td><span class="text-xs text-slate-700 max-w-xs truncate block">' + (r[COL_MAP.details || 'Issue Details'] || '-') + '</span></td>' +
+                    '<td><span class="kam-tag ' + kamClass + '"><span style="width:18px;height:18px;border-radius:50%;background:' + kamColor + ';color:white;font-size:9px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;">' + kamInitials + '</span>' + kamName + '</span></td>' +
+                    '<td>' + statusBadge + '</td>' +
+                    '<td><span class="text-xs text-slate-500">' + (r._sheet || '-') + '</span></td>' +
+                '</tr>';
             }).join('');
 
-            document.getElementById('showingText').textContent = `Showing ${start + 1}-${end} of ${filteredData.length} issues`;
+            document.getElementById('showingText').textContent = 'Showing ' + (start + 1) + '-' + end + ' of ' + filteredData.length + ' issues';
 
             const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
             let pagHTML = '';
             if (totalPages > 1) {
-                pagHTML += `<button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="page-btn" style="${currentPage === 1 ? 'opacity:0.4;cursor:not-allowed;' : ''}">Prev</button>`;
+                pagHTML += '<button onclick="changePage(' + (currentPage - 1) + ')" ' + (currentPage === 1 ? 'disabled' : '') + ' class="page-btn" style="' + (currentPage === 1 ? 'opacity:0.4;cursor:not-allowed;' : '') + '">Prev</button>';
                 for (let i = 1; i <= totalPages; i++) {
                     if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
-                        pagHTML += `<button onclick="changePage(${i})" class="page-btn ${i === currentPage ? 'active' : ''}">${i}</button>`;
+                        pagHTML += '<button onclick="changePage(' + i + ')" class="page-btn ' + (i === currentPage ? 'active' : '') + '">' + i + '</button>';
                     } else if (i === currentPage - 2 || i === currentPage + 2) {
-                        pagHTML += `<span class="page-dots">...</span>`;
+                        pagHTML += '<span class="page-dots">...</span>';
                     }
                 }
-                pagHTML += `<button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="page-btn" style="${currentPage === totalPages ? 'opacity:0.4;cursor:not-allowed;' : ''}">Next</button>`;
+                pagHTML += '<button onclick="changePage(' + (currentPage + 1) + ')" ' + (currentPage === totalPages ? 'disabled' : '') + ' class="page-btn" style="' + (currentPage === totalPages ? 'opacity:0.4;cursor:not-allowed;' : '') + '">Next</button>';
             }
             document.getElementById('pagination').innerHTML = pagHTML;
         }
@@ -1137,7 +1162,8 @@
             const btn = document.getElementById('refreshBtn');
             btn.innerHTML = '<svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Refreshing...';
             await loadAllData();
-                        document.getElementById('lastUpdate').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+            await loadMFData();
+            document.getElementById('lastUpdate').textContent = 'Updated: ' + new Date().toLocaleTimeString();
             btn.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Refresh';
         }
 
