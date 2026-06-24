@@ -159,6 +159,7 @@
     <meta http-equiv="Expires" content="0">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚚</text></svg>">
 <base target="_blank">
+<base target="_blank">
 </head>
 <body class="min-h-screen pb-10">
 
@@ -691,19 +692,14 @@
 
             const findCol = (names) => names.find(n => cols.includes(n));
 
-            // Load any manually-saved column mapping from Settings, so it survives refresh/redeploy.
-            let saved = {};
-            try { saved = JSON.parse(localStorage.getItem('re_colmap') || '{}'); } catch (e) {}
-            const pick = (key, names) => (saved[key] && cols.includes(saved[key])) ? saved[key] : findCol(names);
-
             COL_MAP = {
-                date: pick('date', ['Date', 'date', 'Date Raised', 'Raised Date', 'Created']),
-                consignment: pick('consignment', ['Consignment', 'consignment', 'CN', 'CN No', 'Tracking']),
-                details: pick('details', ['Issue Details', 'Issue', 'Details', 'Problem', 'Description']),
-                category: pick('category', ['Category', 'category', 'Issue Type', 'Type']),
-                status: pick('status', ['Status', 'status', 'State']),
-                kam: pick('kam', ['KAM', 'kam', 'Member', 'member', 'Assignee', 'Assign To', 'Email', 'email', 'Assigned To']),
-                solved: pick('solved', ['Slove date', 'Solved Date', 'Resolved Date', 'Closed Date', 'Date Solved']),
+                date: findCol(['Timestamp', 'Date', 'date', 'Date Raised', 'Raised Date', 'Created']),
+                consignment: findCol(['Consignment ID/Merchant Name (Which one is Applicable)', 'Consignment', 'consignment', 'CN', 'CN No', 'Tracking']),
+                details: findCol(['Issue Details', 'Issue', 'Details', 'Problem', 'Description']),
+                category: findCol(['Issue Category', 'Category', 'category', 'Issue Type', 'Type']),
+                status: findCol(['Issue Status', 'KAM Feedback Status', 'Status', 'status', 'State']),
+                kam: findCol(['Email Address', 'KAM Name', 'KAM', 'kam', 'Member', 'member', 'Assignee', 'Assign To']),
+                solved: findCol(['KAM Feedback Status', 'Slove date', 'Solved Date', 'Resolved Date', 'Closed Date', 'Date Solved']),
                 sheet: '_sheet'
             };
 
