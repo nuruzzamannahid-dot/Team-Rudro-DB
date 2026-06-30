@@ -726,7 +726,21 @@
             allData.forEach(r => Object.keys(r).forEach(k => colSet.add(k)));
             const cols = [...colSet];
 
-            const findCol = (names) => names.find(n => cols.includes(n));
+            const norm = (s) => (s || '').toString().replace(/\s+/g, ' ').trim().toLowerCase();
+
+            const findCol = (names) => {
+                // Exact match first.
+                const exact = names.find(n => cols.includes(n));
+                if (exact) return exact;
+                // Fallback: same text once whitespace/casing differences are ignored —
+                // catches things like a trailing space or a non-breaking space that
+                // made it into the sheet's header but is invisible in the Sheets UI.
+                for (const name of names) {
+                    const match = cols.find(c => norm(c) === norm(name));
+                    if (match) return match;
+                }
+                return undefined;
+            };
 
             const detected = {
                 date: findCol(['Timestamp', 'Date', 'date', 'Date Raised', 'Raised Date', 'Created']),
