@@ -750,6 +750,7 @@
                 status: findCol(['Issue Status', 'KAM Feedback Status', 'Status', 'status', 'State']),
                 kam: findCol(['Email Address', 'KAM Name', 'KAM', 'kam', 'Member', 'member', 'Assignee', 'Assign To']),
                 solved: findCol(['KAM Feedback Status', 'Slove date', 'Solved Date', 'Resolved Date', 'Closed Date', 'Date Solved']),
+                hub: findCol(['Concern Hub (Copy exactly from System)', 'Concern Hub', 'Hub', 'hub']),
                 sheet: '_sheet'
             };
 
@@ -799,6 +800,7 @@
                 }
 
                 r._category = r['Issue Category'] || 'Uncategorized';
+                r._hub = r[COL_MAP.hub || 'Concern Hub (Copy exactly from System)'] || '-';
             });
 
             // Filter to only team members
@@ -1102,7 +1104,7 @@
                 <th>Details</th>
                 <th>KAM</th>
                 <th>Status</th>
-                <th>Sheet</th>
+                <th>Hub</th>
             `;
 
             const start = (currentPage - 1) * PAGE_SIZE;
@@ -1125,7 +1127,7 @@
                     <td><span class="text-xs text-slate-700 max-w-xs truncate block">${r[COL_MAP.details || 'Issue Details'] || '-'}</span></td>
                     <td><span class="kam-tag ${kamClass}"><span style="width:18px;height:18px;border-radius:50%;background:${member ? member.color : '#3b82f6'};color:white;font-size:9px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;">${kamInitials}</span>${r._kam}</span></td>
                     <td>${status}</td>
-                    <td><span class="text-xs text-slate-500">${r._sheet || '-'}</span></td>
+                    <td><span class="text-xs text-slate-500">${r._hub || '-'}</span></td>
                 </tr>`;
             }).join('');
 
@@ -1168,6 +1170,7 @@
                     <div><label class="block text-xs font-semibold text-slate-600 mb-1">Category Column</label><select id="setCategory" class="dropdown-select w-full">${cols.map(c => `<option value="${c}" ${c === (COL_MAP.category || '') ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
                     <div><label class="block text-xs font-semibold text-slate-600 mb-1">KAM Column</label><select id="setKAM" class="dropdown-select w-full">${cols.map(c => `<option value="${c}" ${c === (COL_MAP.kam || '') ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
                     <div><label class="block text-xs font-semibold text-slate-600 mb-1">Solved Date Column</label><select id="setSolved" class="dropdown-select w-full">${cols.map(c => `<option value="${c}" ${c === (COL_MAP.solved || '') ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+                    <div><label class="block text-xs font-semibold text-slate-600 mb-1">Hub Column</label><select id="setHub" class="dropdown-select w-full">${cols.map(c => `<option value="${c}" ${c === (COL_MAP.hub || '') ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
                 </div>
             `;
             document.getElementById('settingsModal').classList.remove('hidden');
@@ -1185,6 +1188,7 @@
                 category: document.getElementById('setCategory').value,
                 kam: document.getElementById('setKAM').value,
                 solved: document.getElementById('setSolved').value,
+                hub: document.getElementById('setHub').value,
                 sheet: '_sheet'
             };
             localStorage.setItem('re_colmap', JSON.stringify(COL_MAP));
