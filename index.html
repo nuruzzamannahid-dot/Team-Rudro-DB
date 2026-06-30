@@ -749,7 +749,8 @@
                 category: findCol(['Issue Category', 'Category', 'category', 'Issue Type', 'Type']),
                 status: findCol(['Issue Status', 'KAM Feedback Status', 'Status', 'status', 'State']),
                 kam: findCol(['Email Address', 'KAM Name', 'KAM', 'kam', 'Member', 'member', 'Assignee', 'Assign To']),
-                solved: findCol(['KAM Feedback Status', 'Slove date', 'Solved Date', 'Resolved Date', 'Closed Date', 'Date Solved']),
+                opsComment1: findCol(['Comments 1 (Ops End)', 'Comments1 (Ops End)', 'Comment 1 (Ops End)', 'Ops Comment 1', 'Comments 1']),
+                opsComment2: findCol(['Comments 2 (Ops End)', 'Comments2 (Ops End)', 'Comment 2 (Ops End)', 'Ops Comment 2', 'Comments 2']),
                 hub: findCol(['Concern Hub (Copy exactly from System)', 'Concern Hub', 'Hub', 'hub']),
                 sheet: '_sheet'
             };
@@ -775,13 +776,13 @@
             allData.forEach(r => {
                 r._date = parseDateRobust(r[COL_MAP.date || 'Timestamp']);
 
-                // Check solved status from KAM Feedback Status
-                const feedbackStatus = (r['KAM Feedback Status'] || '').toString().toLowerCase().trim();
-                const issueStatus = (r['Issue Status'] || '').toString().toLowerCase().trim();
-                r._solved = feedbackStatus === 'solved' || feedbackStatus.includes('solved') || 
-                           feedbackStatus === 'resolved' || feedbackStatus.includes('resolved') ||
-                           feedbackStatus === 'done' || feedbackStatus === 'closed';
+                // Solved/Pending is driven by the Ops End comments (Comments 1 / Comments 2,
+                // columns N & O in the sheet): both blank -> Pending, either filled in -> Solved.
+                const opsComment1 = (r[COL_MAP.opsComment1 || 'Comments 1 (Ops End)'] || '').toString().trim();
+                const opsComment2 = (r[COL_MAP.opsComment2 || 'Comments 2 (Ops End)'] || '').toString().trim();
+                r._solved = !!(opsComment1 || opsComment2);
 
+                const issueStatus = (r['Issue Status'] || '').toString().toLowerCase().trim();
                 r._urgent = issueStatus === 'urgent' || issueStatus.includes('urgent') ||
                            issueStatus === 'high' || issueStatus.includes('high');
 
@@ -1169,7 +1170,8 @@
                     <div><label class="block text-xs font-semibold text-slate-600 mb-1">Details Column</label><select id="setDetails" class="dropdown-select w-full">${cols.map(c => `<option value="${c}" ${c === (COL_MAP.details || '') ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
                     <div><label class="block text-xs font-semibold text-slate-600 mb-1">Category Column</label><select id="setCategory" class="dropdown-select w-full">${cols.map(c => `<option value="${c}" ${c === (COL_MAP.category || '') ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
                     <div><label class="block text-xs font-semibold text-slate-600 mb-1">KAM Column</label><select id="setKAM" class="dropdown-select w-full">${cols.map(c => `<option value="${c}" ${c === (COL_MAP.kam || '') ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
-                    <div><label class="block text-xs font-semibold text-slate-600 mb-1">Solved Date Column</label><select id="setSolved" class="dropdown-select w-full">${cols.map(c => `<option value="${c}" ${c === (COL_MAP.solved || '') ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+                    <div><label class="block text-xs font-semibold text-slate-600 mb-1">Ops Comment 1 Column</label><select id="setOpsComment1" class="dropdown-select w-full">${cols.map(c => `<option value="${c}" ${c === (COL_MAP.opsComment1 || '') ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+                    <div><label class="block text-xs font-semibold text-slate-600 mb-1">Ops Comment 2 Column</label><select id="setOpsComment2" class="dropdown-select w-full">${cols.map(c => `<option value="${c}" ${c === (COL_MAP.opsComment2 || '') ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
                     <div><label class="block text-xs font-semibold text-slate-600 mb-1">Hub Column</label><select id="setHub" class="dropdown-select w-full">${cols.map(c => `<option value="${c}" ${c === (COL_MAP.hub || '') ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
                 </div>
             `;
@@ -1187,7 +1189,8 @@
                 details: document.getElementById('setDetails').value,
                 category: document.getElementById('setCategory').value,
                 kam: document.getElementById('setKAM').value,
-                solved: document.getElementById('setSolved').value,
+                opsComment1: document.getElementById('setOpsComment1').value,
+                opsComment2: document.getElementById('setOpsComment2').value,
                 hub: document.getElementById('setHub').value,
                 sheet: '_sheet'
             };
