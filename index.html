@@ -431,6 +431,8 @@
             'https://docs.google.com/spreadsheets/d/e/2PACX-1vSATMK-rq2t-lJJ-zXs0awGqh8aZlqiG20jGZqTJXDlHPHa2Ih5fOf3-uuZS8cA5CjWw-lC54tMaVei/pub?output=csv' // Sheet 3 = ISD
         ];
 
+        const MF_CSV_URL = ''; // Mail Feedback Tracker source — not wired up yet, set this once you have the sheet's published CSV link
+
         
         let allData = [];
         let filteredData = [];
@@ -689,6 +691,7 @@
         }
 
         async function loadMFData() {
+            if (!MF_CSV_URL) return;
             const rows = await fetchCSV(MF_CSV_URL);
             mfData = rows.map(r => {
                 const date = parseDateRobust(r['Date'] || r['date'] || r['Date Raised'] || r['Raised Date']);
@@ -984,7 +987,9 @@
             kamSelect.innerHTML = '<option value="all">All Members</option>' + kams.map(k => `<option value="${k}">${k}</option>`).join('');
 
             const mfKamSelect = document.getElementById('mfKAMFilter');
-            mfKamSelect.innerHTML = '<option value="all">All members</option>' + TEAM_MEMBERS.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
+            if (mfKamSelect) {
+                mfKamSelect.innerHTML = '<option value="all">All members</option>' + TEAM_MEMBERS.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
+            }
         }
 
         function initFilterPills() {
@@ -1165,8 +1170,16 @@
         async function refreshAll() {
             const btn = document.getElementById('refreshBtn');
             btn.innerHTML = '<svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Refreshing...';
-            await loadAllData();
-            await loadMFData();
+            try {
+                await loadAllData();
+            } catch (e) {
+                console.error('loadAllData failed:', e);
+            }
+            try {
+                await loadMFData();
+            } catch (e) {
+                console.error('loadMFData failed:', e);
+            }
             document.getElementById('lastUpdate').textContent = 'Updated: ' + new Date().toLocaleTimeString();
             btn.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Refresh';
         }
