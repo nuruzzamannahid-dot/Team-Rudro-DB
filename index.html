@@ -68,7 +68,10 @@
         .debug-bar .err { color: #dc2626; }
         /* From Uiverse.io by mamyapro123 */ 
 .theme-switch {
-  --toggle-size: 32px;
+  --toggle-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
   --container-width: 5.625em;
   --container-height: 2.5em;
   --container-radius: 0.38em;
@@ -114,11 +117,9 @@
     #4a92bd 100%
   );
   transition: all var(--transition);
-  box-shadow:
-    0 0 0 2.5px #1a1a1a,
-    3px 4px 0 2.5px rgba(26, 26, 26, 0.22);
-  transform: rotate(-0.7deg);
-  filter: url(#sketchy);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  transform: none;
+  filter: none;
 }
 
 .theme-switch__container::before {
@@ -207,7 +208,7 @@
   opacity: 1;
   transition: opacity var(--transition);
   pointer-events: none;
-  filter: url(#sketchy-sm);
+  filter: none;
 }
 
 .theme-switch__checkbox:checked
@@ -238,9 +239,7 @@
     0.062em 0.062em 0.062em 0em rgba(254, 255, 239, 0.61) inset,
     0em -0.062em 0.062em 0em #a1872a inset,
     0.1em 0.13em 0 0.04em #1a1a1a;
-  filter: url(#sketchy-sm)
-    drop-shadow(0.062em 0.125em 0.125em rgba(0, 0, 0, 0.25))
-    drop-shadow(0em 0.062em 0.125em rgba(0, 0, 0, 0.25));
+  filter: drop-shadow(0.062em 0.125em 0.125em rgba(0, 0, 0, 0.25));
   overflow: hidden;
   transition: var(--transition);
   transform: scale(1);
@@ -279,7 +278,7 @@
   background-color: var(--spot-color);
   box-shadow: 0em 0.0312em 0.062em rgba(0, 0, 0, 0.25) inset;
   transition: background-color 0.3s ease;
-  filter: url(#sketchy-sm);
+  filter: none;
 }
 
 .theme-switch__spot:nth-of-type(2) {
@@ -323,7 +322,7 @@
     4em -0.625em var(--back-clouds-color),
     4.125em -2.125em 0 0.437em var(--back-clouds-color);
   transition: 0.5s cubic-bezier(0, -0.02, 0.4, 1.25);
-  filter: url(#sketchy-sm);
+  filter: none;
 }
 
 .theme-switch__stars-container {
@@ -629,7 +628,7 @@
 }
 
         /* SVG Filters for sketchy effect */
-        .svg-filters { position: absolute; width: 0; height: 0; }
+        
 
         .auth-overlay { position: fixed; inset: 0; background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .auth-box { background: white; border-radius: 20px; padding: 40px; width: 100%; max-width: 420px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); animation: authSlide 0.5s ease-out; }
