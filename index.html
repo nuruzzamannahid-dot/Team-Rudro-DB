@@ -66,14 +66,571 @@
         .debug-bar span { margin-right: 12px; }
         .debug-bar .ok { color: #059669; }
         .debug-bar .err { color: #dc2626; }
-        .theme-toggle { position: relative; width: 52px; height: 28px; border-radius: 14px; background: #e2e8f0; cursor: pointer; transition: all 0.3s ease; border: 2px solid #cbd5e1; display: flex; align-items: center; padding: 2px; }
-        .theme-toggle.dark { background: #334155; border-color: #475569; }
-        .theme-toggle .toggle-knob { width: 22px; height: 22px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); box-shadow: 0 1px 3px rgba(0,0,0,0.15); font-size: 12px; }
-        .theme-toggle.dark .toggle-knob { transform: translateX(24px); background: #1e293b; }
-        .theme-toggle .sun-icon { display: block; }
-        .theme-toggle .moon-icon { display: none; }
-        .theme-toggle.dark .sun-icon { display: none; }
-        .theme-toggle.dark .moon-icon { display: block; }
+        /* From Uiverse.io by mamyapro123 */ 
+.theme-switch {
+  --toggle-size: 32px;
+  --container-width: 5.625em;
+  --container-height: 2.5em;
+  --container-radius: 0.38em;
+  --container-light-bg: #5caad4;
+  --container-night-bg: #1b1e36;
+  --circle-container-diameter: 3.375em;
+  --sun-moon-diameter: 2.125em;
+  --sun-bg: #f5c518;
+  --moon-bg: #d8d4c0;
+  --spot-color: #9b9787;
+  --circle-container-offset: calc(
+    (var(--circle-container-diameter) - var(--container-height)) / 2 * -1
+  );
+  --stars-color: #fff8e1;
+  --clouds-color: #f4f4f4;
+  --back-clouds-color: #bacfe0;
+  --transition: 0.5s cubic-bezier(0, -0.02, 0.4, 1.25);
+  --circle-transition: 0.3s cubic-bezier(0, -0.02, 0.35, 1.17);
+  display: inline-block;
+}
+
+.theme-switch,
+.theme-switch *,
+.theme-switch *::before,
+.theme-switch *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-size: var(--toggle-size);
+}
+
+.theme-switch__container {
+  width: var(--container-width);
+  height: var(--container-height);
+  background-color: var(--container-light-bg);
+  border-radius: var(--container-radius);
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  background-image: linear-gradient(
+    to bottom,
+    var(--container-light-bg) 0%,
+    #4a92bd 100%
+  );
+  transition: all var(--transition);
+  box-shadow:
+    0 0 0 2.5px #1a1a1a,
+    3px 4px 0 2.5px rgba(26, 26, 26, 0.22);
+  transform: rotate(-0.7deg);
+  filter: url(#sketchy);
+}
+
+.theme-switch__container::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    -50deg,
+    transparent,
+    transparent 7px,
+    rgba(255, 255, 255, 0.04) 7px,
+    rgba(255, 255, 255, 0.04) 8px
+  );
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.theme-switch__checkbox {
+  display: none;
+}
+
+.theme-switch__circle-container {
+  width: var(--circle-container-diameter);
+  height: var(--circle-container-diameter);
+  background-color: rgba(255, 255, 255, 0.1);
+  position: absolute;
+  left: var(--circle-container-offset);
+  top: var(--circle-container-offset);
+  border-radius: var(--container-radius);
+  box-shadow:
+    inset 0 0 0 3.375em rgba(255, 255, 255, 0.1),
+    inset 0 0 0 3.375em rgba(255, 255, 255, 0.1),
+    0 0 0 0.625em rgba(255, 255, 255, 0.1),
+    0 0 0 1.25em rgba(255, 255, 255, 0.1);
+  display: flex;
+  transition: var(--circle-transition);
+  pointer-events: none;
+}
+
+.theme-switch__circle-container::before {
+  content: "";
+  position: absolute;
+  width: calc(var(--circle-container-diameter) + 1.5em);
+  height: calc(var(--circle-container-diameter) + 1.5em);
+  left: -0.75em;
+  top: -0.75em;
+  border-radius: 50%;
+  background: conic-gradient(
+    transparent 0deg,
+    transparent 8deg,
+    rgba(245, 197, 24, 0.52) 8deg,
+    rgba(245, 197, 24, 0.52) 22deg,
+    transparent 22deg,
+    transparent 53deg,
+    rgba(245, 197, 24, 0.52) 53deg,
+    rgba(245, 197, 24, 0.52) 67deg,
+    transparent 67deg,
+    transparent 98deg,
+    rgba(245, 197, 24, 0.52) 98deg,
+    rgba(245, 197, 24, 0.52) 112deg,
+    transparent 112deg,
+    transparent 143deg,
+    rgba(245, 197, 24, 0.52) 143deg,
+    rgba(245, 197, 24, 0.52) 157deg,
+    transparent 157deg,
+    transparent 188deg,
+    rgba(245, 197, 24, 0.52) 188deg,
+    rgba(245, 197, 24, 0.52) 202deg,
+    transparent 202deg,
+    transparent 233deg,
+    rgba(245, 197, 24, 0.52) 233deg,
+    rgba(245, 197, 24, 0.52) 247deg,
+    transparent 247deg,
+    transparent 278deg,
+    rgba(245, 197, 24, 0.52) 278deg,
+    rgba(245, 197, 24, 0.52) 292deg,
+    transparent 292deg,
+    transparent 323deg,
+    rgba(245, 197, 24, 0.52) 323deg,
+    rgba(245, 197, 24, 0.52) 337deg,
+    transparent 337deg,
+    transparent 360deg
+  );
+  animation: rotateSunRays 14s linear infinite;
+  opacity: 1;
+  transition: opacity var(--transition);
+  pointer-events: none;
+  filter: url(#sketchy-sm);
+}
+
+.theme-switch__checkbox:checked
+  + .theme-switch__container
+  .theme-switch__circle-container::before {
+  opacity: 0;
+}
+
+@keyframes rotateSunRays {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.theme-switch__sun-moon-container {
+  pointer-events: auto;
+  position: relative;
+  z-index: 2;
+  width: var(--sun-moon-diameter);
+  height: var(--sun-moon-diameter);
+  margin: auto;
+  border-radius: var(--container-radius);
+  background-color: var(--sun-bg);
+  box-shadow:
+    0.062em 0.062em 0.062em 0em rgba(254, 255, 239, 0.61) inset,
+    0em -0.062em 0.062em 0em #a1872a inset,
+    0.1em 0.13em 0 0.04em #1a1a1a;
+  filter: url(#sketchy-sm)
+    drop-shadow(0.062em 0.125em 0.125em rgba(0, 0, 0, 0.25))
+    drop-shadow(0em 0.062em 0.125em rgba(0, 0, 0, 0.25));
+  overflow: hidden;
+  transition: var(--transition);
+  transform: scale(1);
+}
+
+.theme-switch__sun-moon-container:hover {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.theme-switch__moon {
+  transform: translateX(100%);
+  width: 100%;
+  height: 100%;
+  background-color: var(--moon-bg);
+  border-radius: inherit;
+  box-shadow:
+    0.062em 0.062em 0.062em 0em rgba(254, 255, 239, 0.61) inset,
+    0em -0.062em 0.062em 0em #969696 inset;
+  transition:
+    all var(--transition),
+    transform 0.3s ease;
+  position: relative;
+}
+
+.theme-switch__moon:hover {
+  transform: rotate(15deg);
+}
+
+.theme-switch__spot {
+  position: absolute;
+  top: 0.75em;
+  left: 0.312em;
+  width: 0.75em;
+  height: 0.75em;
+  border-radius: var(--container-radius);
+  background-color: var(--spot-color);
+  box-shadow: 0em 0.0312em 0.062em rgba(0, 0, 0, 0.25) inset;
+  transition: background-color 0.3s ease;
+  filter: url(#sketchy-sm);
+}
+
+.theme-switch__spot:nth-of-type(2) {
+  width: 0.375em;
+  height: 0.375em;
+  top: 0.937em;
+  left: 1.375em;
+}
+.theme-switch__spot:nth-last-of-type(3) {
+  width: 0.25em;
+  height: 0.25em;
+  top: 0.312em;
+  left: 0.812em;
+}
+.theme-switch__moon:hover .theme-switch__spot {
+  background-color: #7a7f8c;
+}
+
+.theme-switch__clouds {
+  width: 1.25em;
+  height: 1.25em;
+  background-color: var(--clouds-color);
+  border-radius: var(--container-radius);
+  position: absolute;
+  bottom: -0.625em;
+  left: 0.312em;
+  box-shadow:
+    0.937em 0.312em var(--clouds-color),
+    -0.312em -0.312em var(--back-clouds-color),
+    1.437em 0.375em var(--clouds-color),
+    0.5em -0.125em var(--back-clouds-color),
+    2.187em 0 var(--clouds-color),
+    1.25em -0.062em var(--back-clouds-color),
+    2.937em 0.312em var(--clouds-color),
+    2em -0.312em var(--back-clouds-color),
+    3.625em -0.062em var(--clouds-color),
+    2.625em 0em var(--back-clouds-color),
+    4.5em -0.312em var(--clouds-color),
+    3.375em -0.437em var(--back-clouds-color),
+    4.625em -1.75em 0 0.437em var(--clouds-color),
+    4em -0.625em var(--back-clouds-color),
+    4.125em -2.125em 0 0.437em var(--back-clouds-color);
+  transition: 0.5s cubic-bezier(0, -0.02, 0.4, 1.25);
+  filter: url(#sketchy-sm);
+}
+
+.theme-switch__stars-container {
+  position: absolute;
+  color: var(--stars-color);
+  top: -100%;
+  left: 0.312em;
+  width: 2.75em;
+  height: auto;
+  transition: var(--transition);
+}
+
+.theme-switch__checkbox:checked + .theme-switch__container {
+  background-color: var(--container-night-bg);
+  background-image: linear-gradient(
+    to bottom,
+    var(--container-night-bg) 0%,
+    #252a4a 100%
+  );
+}
+
+.theme-switch__checkbox:checked
+  + .theme-switch__container
+  .theme-switch__circle-container {
+  left: calc(
+    100% - var(--circle-container-offset) - var(--circle-container-diameter)
+  );
+}
+
+.theme-switch__checkbox:checked
+  + .theme-switch__container
+  .theme-switch__circle-container:hover {
+  left: calc(
+    100% - var(--circle-container-offset) - var(--circle-container-diameter) -
+      0.187em
+  );
+}
+
+.theme-switch__circle-container:hover {
+  left: calc(var(--circle-container-offset) + 0.187em);
+}
+
+.theme-switch__checkbox:checked + .theme-switch__container .theme-switch__moon {
+  transform: translate(0);
+}
+
+.theme-switch__checkbox:checked
+  + .theme-switch__container
+  .theme-switch__clouds {
+  bottom: -4.062em;
+}
+
+.theme-switch__checkbox:checked
+  + .theme-switch__container
+  .theme-switch__stars-container {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.theme-switch__container:hover .theme-switch__clouds {
+  transform: translateX(15px) scale(1.02);
+}
+
+.theme-switch__sun-moon-container::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.2) 0%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.theme-switch__sun-moon-container:hover::after {
+  opacity: 1;
+}
+
+.theme-switch__shooting-star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: white;
+  top: 20%;
+  left: -10%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.theme-switch__shooting-star-2 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  background: white;
+  top: 35%;
+  left: -10%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.theme-switch__meteor {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: #ffd700;
+  border-radius: 50%;
+  top: -10%;
+  left: 50%;
+  opacity: 0;
+  filter: blur(1px);
+  transition: opacity 0.3s ease;
+}
+
+.theme-switch__checkbox:checked
+  + .theme-switch__container
+  .theme-switch__shooting-star {
+  animation: shootingStar 2s linear infinite;
+  opacity: 1;
+}
+
+.theme-switch__checkbox:checked
+  + .theme-switch__container
+  .theme-switch__shooting-star-2 {
+  animation: shootingStar 3s linear infinite 1s;
+  opacity: 1;
+}
+
+.theme-switch__checkbox:checked
+  + .theme-switch__container
+  .theme-switch__meteor {
+  animation: meteor 4s linear infinite 2s;
+  opacity: 1;
+}
+
+@keyframes shootingStar {
+  0% {
+    transform: translateX(0) translateY(0) rotate(45deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(150px) translateY(150px) rotate(45deg);
+    opacity: 0;
+  }
+}
+
+@keyframes meteor {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(150px) scale(0.3);
+    opacity: 0;
+  }
+}
+
+.theme-switch__stars-cluster {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.theme-switch__stars-cluster .star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 0 4px 1px white;
+}
+
+.theme-switch__stars-cluster .star:nth-child(1) {
+  top: 20%;
+  left: 20%;
+  animation: twinkle 1s infinite ease-in-out;
+}
+.theme-switch__stars-cluster .star:nth-child(2) {
+  top: 30%;
+  left: 55%;
+  animation: twinkle 1s infinite ease-in-out 0.3s;
+}
+.theme-switch__stars-cluster .star:nth-child(3) {
+  top: 40%;
+  left: 80%;
+  animation: twinkle 1s infinite ease-in-out 0.6s;
+}
+.theme-switch__stars-cluster .star:nth-child(4) {
+  top: 60%;
+  left: 30%;
+  animation: twinkle 1s infinite ease-in-out 0.9s;
+}
+.theme-switch__stars-cluster .star:nth-child(5) {
+  top: 70%;
+  left: 65%;
+  animation: twinkle 1s infinite ease-in-out 1.2s;
+}
+
+.theme-switch__aurora {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 255, 255, 0) 0%,
+    rgba(0, 255, 255, 0.2) 25%,
+    rgba(128, 0, 255, 0.2) 50%,
+    rgba(0, 255, 255, 0.2) 75%,
+    rgba(0, 255, 255, 0) 100%
+  );
+  opacity: 0;
+  filter: blur(4px);
+  transform: translateY(-100%);
+  transition: opacity 0.3s ease;
+}
+
+.theme-switch__comets {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.theme-switch__comets .comet {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: linear-gradient(90deg, white 0%, transparent 90%);
+  border-radius: 50%;
+  filter: blur(1px);
+}
+
+.theme-switch__comets .comet:nth-child(1) {
+  top: 30%;
+  left: -10%;
+  animation: cometMove 4s linear infinite;
+}
+.theme-switch__comets .comet:nth-child(2) {
+  top: 50%;
+  left: -10%;
+  animation: cometMove 6s linear infinite 2s;
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes cometMove {
+  0% {
+    transform: translateX(0) translateY(0) rotate(-45deg) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(200px) translateY(200px) rotate(-45deg) scale(0.2);
+    opacity: 0;
+  }
+}
+
+.theme-switch__checkbox:checked
+  + .theme-switch__container
+  .theme-switch__stars-cluster {
+  opacity: 1;
+}
+.theme-switch__checkbox:checked
+  + .theme-switch__container
+  .theme-switch__aurora {
+  opacity: 1;
+  animation: auroraWave 8s linear infinite;
+}
+.theme-switch__checkbox:checked
+  + .theme-switch__container
+  .theme-switch__comets {
+  opacity: 1;
+}
+
+@keyframes auroraWave {
+  0% {
+    transform: translateY(-100%) translateX(-50%);
+  }
+  100% {
+    transform: translateY(-100%) translateX(50%);
+  }
+}
+
+        /* SVG Filters for sketchy effect */
+        .svg-filters { position: absolute; width: 0; height: 0; }
+
         .auth-overlay { position: fixed; inset: 0; background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .auth-box { background: white; border-radius: 20px; padding: 40px; width: 100%; max-width: 420px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); animation: authSlide 0.5s ease-out; }
         @keyframes authSlide { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -113,8 +670,7 @@
         .empty-state { color: var(--text-muted); }
         header { background: var(--header-bg) !important; border-color: var(--header-border) !important; transition: background 0.3s ease, border-color 0.3s ease; }
         #settingsModal > div:first-child { background: var(--modal-overlay); }
-        .theme-toggle { background: var(--toggle-bg); border-color: var(--toggle-border); }
-        .theme-toggle .toggle-knob { background: var(--toggle-knob); }
+        
         .page-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 36px; height: 36px; padding: 0 12px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-secondary); }
         .page-btn:hover:not(:disabled) { background: var(--hover-bg); border-color: var(--text-muted); }
         .page-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; box-shadow: 0 2px 8px rgba(59,130,246,0.3); }
@@ -184,12 +740,41 @@
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                         Logout
                     </button>
-                    <div class="theme-toggle" id="themeToggle" onclick="toggleDarkMode()" title="Toggle Dark Mode">
-                        <div class="toggle-knob">
-                            <span class="sun-icon">☀️</span>
-                            <span class="moon-icon">🌙</span>
+                    <label class="theme-switch" id="themeToggle" title="Toggle Dark Mode">
+                        <input type="checkbox" class="theme-switch__checkbox" id="themeCheckbox" onchange="toggleDarkMode()">
+                        <div class="theme-switch__container">
+                            <div class="theme-switch__circle-container">
+                                <div class="theme-switch__sun-moon-container">
+                                    <div class="theme-switch__moon">
+                                        <div class="theme-switch__spot"></div>
+                                        <div class="theme-switch__spot"></div>
+                                        <div class="theme-switch__spot"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="theme-switch__clouds"></div>
+                            <div class="theme-switch__stars-container">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 55" fill="none">
+                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M135.831 3.00688C135.055 3.85027 134.111 4.29946 133 4.35447C134.111 4.40947 135.055 4.85867 135.831 5.71123C136.607 6.55462 136.996 7.56369 136.996 8.72727C136.996 7.56369 137.386 6.55462 138.166 5.71123C138.952 4.85867 139.894 4.40947 141 4.35447C139.894 4.29946 138.952 3.85027 138.166 3.00688C137.386 2.16348 136.996 1.15442 136.996 0C136.996 1.15442 136.607 2.16348 135.831 3.00688ZM100 13.3545C101.111 13.4095 102.055 13.8587 102.831 14.7112C103.607 15.5546 103.996 16.5637 103.996 17.7273C103.996 16.5637 104.386 15.5546 105.166 14.7112C105.952 13.8587 106.894 13.4095 108 13.3545C106.894 13.2995 105.952 12.8503 105.166 12.0069C104.386 11.1635 103.996 10.1544 103.996 9C103.996 10.1544 103.607 11.1635 102.831 12.0069C102.055 12.8503 101.111 13.2995 100 13.3545ZM59.831 20.0069C59.055 20.8503 58.111 21.2995 57 21.3545C58.111 21.4095 59.055 21.8587 59.831 22.7112C60.607 23.5546 60.996 24.5637 60.996 25.7273C60.996 24.5637 61.386 23.5546 62.166 22.7112C62.952 21.8587 63.894 21.4095 65 21.3545C63.894 21.2995 62.952 20.8503 62.166 20.0069C61.386 19.1635 60.996 18.1544 60.996 17C60.996 18.1544 60.607 19.1635 59.831 20.0069ZM120.831 28.0069C120.055 28.8503 119.111 29.2995 118 29.3545C119.111 29.4095 120.055 29.8587 120.831 30.7112C121.607 31.5546 121.996 32.5637 121.996 33.7273C121.996 32.5637 122.386 31.5546 123.166 30.7112C123.952 29.8587 124.894 29.4095 126 29.3545C124.894 29.2995 123.952 28.8503 123.166 28.0069C122.386 27.1635 121.996 26.1544 121.996 25C121.996 26.1544 121.607 27.1635 120.831 28.0069ZM20.831 35.0069C20.055 35.8503 19.111 36.2995 18 36.3545C19.111 36.4095 20.055 36.8587 20.831 37.7112C21.607 38.5546 21.996 39.5637 21.996 40.7273C21.996 39.5637 22.386 38.5546 23.166 37.7112C23.952 36.8587 24.894 36.4095 26 36.3545C24.894 36.2995 23.952 35.8503 23.166 35.0069C22.386 34.1635 21.996 33.1544 21.996 32C21.996 33.1544 21.607 34.1635 20.831 35.0069ZM83.831 43.0069C83.055 43.8503 82.111 44.2995 81 44.3545C82.111 44.4095 83.055 44.8587 83.831 45.7112C84.607 46.5546 84.996 47.5637 84.996 48.7273C84.996 47.5637 85.386 46.5546 86.166 45.7112C86.952 44.8587 87.894 44.4095 89 44.3545C87.894 44.2995 86.952 43.8503 86.166 43.0069C85.386 42.1635 84.996 41.1544 84.996 40C84.996 41.1544 84.607 42.1635 83.831 43.0069ZM140 53.3545C141.111 53.4095 142.055 53.8587 142.831 54.7112C143.607 55.5546 143.996 56.5637 143.996 57.7273C143.996 56.5637 144.386 55.5546 145.166 54.7112C145.952 53.8587 146.894 53.4095 148 53.3545C146.894 53.2995 145.952 52.8503 145.166 52.0069C144.386 51.1635 143.996 50.1544 143.996 49C143.996 50.1544 143.607 51.1635 142.831 52.0069C142.055 52.8503 141.111 53.2995 140 53.3545ZM4.83099 52.0069C4.05499 52.8503 3.11099 53.2995 1.99999 53.3545C3.11099 53.4095 4.05499 53.8587 4.83099 54.7112C5.60699 55.5546 5.99599 56.5637 5.99599 57.7273C5.99599 56.5637 6.38599 55.5546 7.16599 54.7112C7.95199 53.8587 8.89399 53.4095 9.99999 53.3545C8.89399 53.2995 7.95199 52.8503 7.16599 52.0069C6.38599 51.1635 5.99599 50.1544 5.99599 49C5.99599 50.1544 5.60699 51.1635 4.83099 52.0069Z" fill="currentColor"/>
+                                </svg>
+                            </div>
+                            <div class="theme-switch__shooting-star"></div>
+                            <div class="theme-switch__shooting-star-2"></div>
+                            <div class="theme-switch__meteor"></div>
+                            <div class="theme-switch__stars-cluster">
+                                <div class="star"></div>
+                                <div class="star"></div>
+                                <div class="star"></div>
+                                <div class="star"></div>
+                                <div class="star"></div>
+                            </div>
+                            <div class="theme-switch__aurora"></div>
+                            <div class="theme-switch__comets">
+                                <div class="comet"></div>
+                                <div class="comet"></div>
+                            </div>
                         </div>
-                    </div>
+                    </label>
                 </div>
             </div>
             <div class="max-w-7xl mx-auto mt-2">
@@ -448,13 +1033,18 @@
             const dark = localStorage.getItem('re_dark') === 'true';
             if (dark) {
                 document.documentElement.classList.add('dark');
-                document.getElementById('themeToggle').classList.add('dark');
+                document.getElementById('themeCheckbox').checked = true;
             }
         }
 
         function toggleDarkMode() {
-            const isDark = document.documentElement.classList.toggle('dark');
-            document.getElementById('themeToggle').classList.toggle('dark');
+            const checkbox = document.getElementById('themeCheckbox');
+            const isDark = checkbox.checked;
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
             localStorage.setItem('re_dark', isDark);
             if (categoryChart) categoryChart.update();
             if (dailyChart) dailyChart.update();
