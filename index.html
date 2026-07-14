@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com?v=2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js?v=4.4.1"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js?v=5.4.1"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { font-family: 'Inter', sans-serif; }
@@ -22,7 +23,6 @@
         .border-rose { border-color: #f43f5e; }
         .avatar { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: white; }
         .badge { padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; }
-        .badge-pink { background: #fce7f3; color: #be185d; border: 1px solid #fbcfe8; }
         .stat-box { background: #f8fafc; border-radius: 12px; padding: 16px; text-align: center; }
         .category-pill { background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 12px; font-size: 12px; color: #475569; font-weight: 500; }
         .urgent-bar { background: linear-gradient(90deg, #fef3c7, #fffbeb); border: 1px solid #fde68a; border-radius: 10px; padding: 12px 16px; display: flex; align-items: center; gap: 8px; color: #b45309; font-size: 13px; font-weight: 600; }
@@ -36,7 +36,6 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         .chart-container { position: relative; height: 280px; }
         .today-badge { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; }
-
         .filter-pill { padding: 8px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: 1px solid #e2e8f0; background: white; color: #64748b; }
         .filter-pill.active { background: #ecfdf5; color: #059669; border-color: #a7f3d0; box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
         .filter-pill:hover:not(.active) { background: #f8fafc; border-color: #cbd5e1; }
@@ -57,10 +56,6 @@
         .kam-tag-jubayer { background: #f5f3ff; color: #6d28d9; }
         .kam-tag-rahul { background: #ecfeff; color: #155e75; }
         .kam-tag-abdul { background: #fdf2f8; color: #9d174d; }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-        .status-solved { background: #10b981; }
-        .status-pending { background: #f59e0b; }
-        .status-urgent { background: #f43f5e; }
         .ops-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; }
         .ops-solved { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
         .ops-other { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
@@ -71,7 +66,6 @@
         .debug-bar span { margin-right: 12px; }
         .debug-bar .ok { color: #059669; }
         .debug-bar .err { color: #dc2626; }
-
         .theme-toggle { position: relative; width: 52px; height: 28px; border-radius: 14px; background: #e2e8f0; cursor: pointer; transition: all 0.3s ease; border: 2px solid #cbd5e1; display: flex; align-items: center; padding: 2px; }
         .theme-toggle.dark { background: #334155; border-color: #475569; }
         .theme-toggle .toggle-knob { width: 22px; height: 22px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); box-shadow: 0 1px 3px rgba(0,0,0,0.15); font-size: 12px; }
@@ -80,23 +74,13 @@
         .theme-toggle .moon-icon { display: none; }
         .theme-toggle.dark .sun-icon { display: none; }
         .theme-toggle.dark .moon-icon { display: block; }
-
         .auth-overlay { position: fixed; inset: 0; background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .auth-box { background: white; border-radius: 20px; padding: 40px; width: 100%; max-width: 420px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); animation: authSlide 0.5s ease-out; }
         @keyframes authSlide { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .auth-logo { width: 56px; height: 56px; border-radius: 14px; background: linear-gradient(135deg, #3b82f6, #2563eb); display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 24px; }
-        .auth-input { width: 100%; padding: 12px 16px; border-radius: 10px; border: 1.5px solid #e2e8f0; font-size: 14px; outline: none; transition: all 0.2s; background: #f8fafc; }
-        .auth-input:focus { border-color: #3b82f6; background: white; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
-        .auth-btn { width: 100%; padding: 12px; border-radius: 10px; background: #3b82f6; color: white; font-weight: 700; font-size: 14px; border: none; cursor: pointer; transition: all 0.2s; }
-        .auth-btn:hover { background: #2563eb; }
-        .auth-btn:active { transform: scale(0.98); }
         .auth-error { color: #dc2626; font-size: 13px; font-weight: 600; text-align: center; margin-top: 12px; display: none; }
-        .auth-remember { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #64748b; cursor: pointer; }
-        .auth-remember input { width: 16px; height: 16px; accent-color: #3b82f6; cursor: pointer; }
-
         :root { --bg-body: #f0f4f8; --bg-card: #ffffff; --text-primary: #1e293b; --text-secondary: #64748b; --text-muted: #94a3b8; --border-color: #e2e8f0; --input-bg: #f1f5f9; --hover-bg: #f8fafc; --badge-bg: #f1f5f9; --stat-bg: #f8fafc; --urgent-bg: linear-gradient(90deg, #fef3c7, #fffbeb); --urgent-border: #fde68a; --urgent-text: #b45309; --table-header-bg: #fafbfc; --table-row-hover: #f8fafc; --debug-bg: #f8fafc; --tab-active-bg: #eff6ff; --tab-active-text: #3b82f6; --tab-active-border: #bfdbfe; --filter-active-bg: #ecfdf5; --filter-active-text: #059669; --filter-active-border: #a7f3d0; --today-bg: #ecfdf5; --today-text: #059669; --today-border: #a7f3d0; --modal-overlay: rgba(0,0,0,0.4); --header-bg: #ffffff; --header-border: #e2e8f0; --toggle-bg: #e2e8f0; --toggle-border: #cbd5e1; --toggle-knob: #ffffff; }
         html.dark { --bg-body: #0f172a; --bg-card: #1e293b; --text-primary: #f1f5f9; --text-secondary: #94a3b8; --text-muted: #64748b; --border-color: #334155; --input-bg: #334155; --hover-bg: #334155; --badge-bg: #334155; --stat-bg: #1e293b; --urgent-bg: linear-gradient(90deg, #451a03, #78350f); --urgent-border: #92400e; --urgent-text: #fbbf24; --table-header-bg: #1e293b; --table-row-hover: #334155; --debug-bg: #1e293b; --tab-active-bg: #1e3a5f; --tab-active-text: #60a5fa; --tab-active-border: #3b82f6; --filter-active-bg: #064e3b; --filter-active-text: #34d399; --filter-active-border: #059669; --today-bg: #064e3b; --today-text: #34d399; --today-border: #059669; --modal-overlay: rgba(0,0,0,0.7); --header-bg: #1e293b; --header-border: #334155; --toggle-bg: #334155; --toggle-border: #475569; --toggle-knob: #1e293b; }
-
         body { background: var(--bg-body); transition: background 0.3s ease; }
         .card { background: var(--bg-card); transition: background 0.3s ease, border-color 0.3s ease; }
         .summary-card { border-top: 4px solid; }
@@ -131,20 +115,15 @@
         #settingsModal > div:first-child { background: var(--modal-overlay); }
         .theme-toggle { background: var(--toggle-bg); border-color: var(--toggle-border); }
         .theme-toggle .toggle-knob { background: var(--toggle-knob); }
-
         .page-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 36px; height: 36px; padding: 0 12px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-secondary); }
         .page-btn:hover:not(:disabled) { background: var(--hover-bg); border-color: var(--text-muted); }
         .page-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; box-shadow: 0 2px 8px rgba(59,130,246,0.3); }
         .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .page-dots { display: inline-flex; align-items: center; justify-content: center; min-width: 36px; height: 36px; font-size: 13px; color: var(--text-muted); font-weight: 600; }
-
-        
-
         .member-card-grid { display: grid; grid-template-columns: repeat(1, 1fr); gap: 16px; }
         @media (min-width: 768px) { .member-card-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (min-width: 1280px) { .member-card-grid { grid-template-columns: repeat(3, 1fr); } }
         @media (min-width: 1536px) { .member-card-grid { grid-template-columns: repeat(4, 1fr); } }
-
         .avatar-rudra { background: linear-gradient(135deg, #3b82f6, #2563eb); }
         .avatar-rizvi { background: linear-gradient(135deg, #ef4444, #dc2626); }
         .avatar-sohel { background: linear-gradient(135deg, #10b981, #059669); }
@@ -152,57 +131,33 @@
         .avatar-jubayer { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
         .avatar-rahul { background: linear-gradient(135deg, #06b6d4, #0891b2); }
         .avatar-abdul { background: linear-gradient(135deg, #ec4899, #db2777); }
+        #g_id_signin { display: flex; justify-content: center; margin-top: 20px; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid #e2e8f0; }
+        .user-info { display: flex; align-items: center; gap: 8px; }
     </style>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚚</text></svg>">
-<base target="_blank">
+    <base target="_blank">
 <base target="_blank">
 </head>
 <body class="min-h-screen pb-10">
 
-    <!-- AUTHENTICATION OVERLAY -->
     <div id="authOverlay" class="auth-overlay">
         <div class="auth-box">
             <div class="auth-logo">🚚</div>
             <h2 class="text-xl font-bold text-slate-800 mb-1">Revenue Engine Issue Tracker</h2>
-            <p class="text-sm text-slate-500 mb-6">Authorized personnel only. Please sign in to continue.</p>
-
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Username</label>
-                    <input type="text" id="authUser" class="auth-input" placeholder="Enter username" autocomplete="off">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Password</label>
-                    <div style="position: relative;">
-                        <input type="password" id="authPass" class="auth-input" style="padding-right: 40px;" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()">
-                        <button type="button" onclick="togglePassword()" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); z-index: 10; cursor: pointer; background: none; border: none; padding: 0;" title="Show/Hide Password">
-                            <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                            <svg id="eyeOffIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-                        </button>
-                    </div>
-                </div>
-                <div class="flex items-center justify-between">
-                    <label class="auth-remember" for="authRemember">
-                        <input type="checkbox" id="authRemember">
-                        <span>Keep me signed in</span>
-                    </label>
-                </div>
-                <button onclick="doLogin()" class="auth-btn">Sign In</button>
-                <div id="authError" class="auth-error">Invalid username or password</div>
-            </div>
-
+            <p class="text-sm text-slate-500 mb-6">Sign in with your @carrybee.com Google account to continue.</p>
+            <div id="g_id_signin"></div>
+            <div id="authError" class="auth-error">Only @carrybee.com email addresses are allowed.</div>
             <div class="mt-6 pt-4 border-t border-slate-100 text-center">
                 <p class="text-xs text-slate-400">© Carrybee Operations — Revenue Engine</p>
             </div>
         </div>
     </div>
 
-    <!-- DASHBOARD (hidden until auth) -->
     <div id="appContent" style="display:none">
-        <!-- Header -->
         <header class="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-50">
             <div class="max-w-7xl mx-auto flex items-center justify-between">
                 <div class="flex items-center gap-3">
@@ -220,19 +175,15 @@
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                         Refresh
                     </button>
-                    <button onclick="openSettings()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-lg transition-colors">
-                        ⚙️ Settings
-                    </button>
+                    <button onclick="openSettings()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-lg transition-colors">⚙️ Settings</button>
+                    <div class="user-info" id="userInfo">
+                        <img id="userAvatar" src="" alt="" class="user-avatar hidden">
+                        <span id="userName" class="text-xs font-semibold text-slate-600"></span>
+                    </div>
                     <button onclick="doLogout()" class="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                         Logout
                     </button>
-                    <button id="adminBtn" onclick="openAdminPanel()" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 text-xs font-semibold rounded-lg transition-colors hidden flex items-center gap-1.5">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                        Manage Users
-                    </button>
-
-                    <!-- Dark Mode Toggle -->
                     <div class="theme-toggle" id="themeToggle" onclick="toggleDarkMode()" title="Toggle Dark Mode">
                         <div class="toggle-knob">
                             <span class="sun-icon">☀️</span>
@@ -246,9 +197,7 @@
             </div>
         </header>
 
-        <!-- Main Content -->
         <main class="max-w-7xl mx-auto px-6 py-6 space-y-6">
-            <!-- Summary Cards -->
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4" id="summaryCards">
                 <div class="card summary-card border-blue p-5 card-hover">
                     <div class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-2">Total Issues</div>
@@ -272,16 +221,13 @@
                 </div>
             </div>
 
-            <!-- Member Cards -->
             <div class="member-card-grid" id="memberCards"></div>
 
-            <!-- Issues by Category Chart -->
             <div class="card p-6">
                 <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Issues by Category</h3>
                 <div class="chart-container"><canvas id="categoryChart"></canvas></div>
             </div>
 
-            <!-- Daily Issues Chart -->
             <div class="card p-6">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-3">
@@ -298,11 +244,8 @@
                 <div class="chart-container"><canvas id="dailyChart"></canvas></div>
             </div>
 
-            <!-- ISSUES LOG SECTION -->
             <div class="card p-6">
                 <div class="section-title mb-5">Issues Log</div>
-
-                <!-- Filters Row -->
                 <div class="flex flex-col lg:flex-row gap-3 mb-4">
                     <div class="flex-1">
                         <input type="text" id="searchInput" placeholder="Search consignment, details, category..." class="search-input" oninput="applyFilters()">
@@ -328,21 +271,11 @@
                         </select>
                     </div>
                 </div>
-
-                <!-- Filter Pills -->
                 <div class="flex gap-2 mb-4 flex-wrap" id="filterPills"></div>
-
-                <!-- Table -->
                 <div class="overflow-x-auto">
                     <table class="issues-table" id="issuesTable">
-                        <thead>
-                            <tr id="tableHeader">
-                                <th>Loading...</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableBody">
-                            <tr><td colspan="100" class="empty-state">Loading data...</td></tr>
-                        </tbody>
+                        <thead><tr id="tableHeader"><th>Loading...</th></tr></thead>
+                        <tbody id="tableBody"><tr><td colspan="100" class="empty-state">Loading data...</td></tr></tbody>
                     </table>
                 </div>
                 <div id="tableFooter" class="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
@@ -353,48 +286,6 @@
         </main>
     </div>
 
-
-    <!-- Admin Panel Modal -->
-    <div id="adminModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl" style="max-height: 80vh; overflow-y: auto;">
-            <h3 class="text-lg font-bold text-slate-800 mb-1">User Management</h3>
-            <p class="text-sm text-slate-500 mb-5">Add or remove authorized users. Only admins can access this panel.</p>
-
-            <div class="bg-slate-50 rounded-xl p-4 mb-5">
-                <h4 class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-3">Add New User</h4>
-                <div class="space-y-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Username</label>
-                        <input type="text" id="newUserName" class="auth-input" placeholder="e.g. john" autocomplete="off">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Password</label>
-                        <input type="text" id="newUserPass" class="auth-input" placeholder="Enter password" autocomplete="off">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Role</label>
-                        <select id="newUserRole" class="dropdown-select w-full">
-                            <option value="user">User</option>
-                            <option value="admin">Admin</option>
-                        </select>
-                    </div>
-                    <button onclick="addNewUser()" class="auth-btn">Add User</button>
-                    <div id="adminError" class="auth-error" style="display:none"></div>
-                </div>
-            </div>
-
-            <div>
-                <h4 class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-3">Active Users</h4>
-                <div id="usersList" class="space-y-2"></div>
-            </div>
-
-            <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
-                <button onclick="closeAdminPanel()" class="px-4 py-2 text-sm text-slate-500 hover:text-slate-800 font-medium transition-colors">Close</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Settings Modal -->
     <div id="settingsModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl">
             <h3 class="text-lg font-bold text-slate-800 mb-1">Column Settings</h3>
@@ -409,7 +300,9 @@
 
     <script>
 
-        // ===================== CONFIG =====================
+        const GOOGLE_CLIENT_ID = "806093436112-aa9li1ulrf5c5upi8d0plch179416499.apps.googleusercontent.com";
+        const ALLOWED_DOMAIN = "carrybee.com";
+
         const TEAM_MEMBERS = [
             { name: 'Raian Islam Rudra', key: 'rudra', initials: 'RU', color: '#3b82f6', id: 'CL-86045', designation: 'Senior Executive', email: 'raian.rudra@carrybee.com' },
             { name: 'Rizvi Ahmed Chowdhury', key: 'rizvi', initials: 'RZ', color: '#ef4444', id: 'CL-84119', designation: 'Associate', email: 'rizvi.chy@carrybee.com' },
@@ -420,20 +313,14 @@
             { name: 'Abdul Goni Howlader', key: 'abdul', initials: 'AB', color: '#ec4899', id: 'CL-84541', designation: 'Associate', email: 'abdul.goni@carrybee.com' }
         ];
 
-        const DEFAULT_USERS = [
-            { username: 'rudra', password: 'rudra123', role: 'admin' },
-            { username: 'admin', password: 'admin123', role: 'admin' }
-        ];
-
         const CSV_URLS = [
-            'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcOarJ56dgsrvy-2tlPVF0YTLtJHLVGb9ujMxdUCjTnAgOwNFXKkLfLC1iy_gsV3-DWSub2CzbOX7f/pub?output=csv', // Sheet 1 = OSD
-            'https://docs.google.com/spreadsheets/d/e/2PACX-1vRuVgcD-GpRgbnsU5xNeTresggru20cosxlwAJBA2DP5XHEUSIGqkuitWqOvntvWVSFJHSa7_6xLzAs/pub?output=csv', // Sheet 2 = Central
-            'https://docs.google.com/spreadsheets/d/e/2PACX-1vSATMK-rq2t-lJJ-zXs0awGqh8aZlqiG20jGZqTJXDlHPHa2Ih5fOf3-uuZS8cA5CjWw-lC54tMaVei/pub?output=csv' // Sheet 3 = ISD
+            'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcOarJ56dgsrvy-2tlPVF0YTLtJHLVGb9ujMxdUCjTnAgOwNFXKkLfLC1iy_gsV3-DWSub2CzbOX7f/pub?output=csv',
+            'https://docs.google.com/spreadsheets/d/e/2PACX-1vRuVgcD-GpRgbnsU5xNeTresggru20cosxlwAJBA2DP5XHEUSIGqkuitWqOvntvWVSFJHSa7_6xLzAs/pub?output=csv',
+            'https://docs.google.com/spreadsheets/d/e/2PACX-1vSATMK-rq2t-lJJ-zXs0awGqh8aZlqiG20jGZqTJXDlHPHa2Ih5fOf3-uuZS8cA5CjWw-lC54tMaVei/pub?output=csv'
         ];
 
-        const MF_CSV_URL = ''; // Mail Feedback Tracker source — not wired up yet, set this once you have the sheet's published CSV link
+        const MF_CSV_URL = '';
 
-        
         let allData = [];
         let filteredData = [];
         let currentPage = 1;
@@ -443,142 +330,117 @@
         let currentPeriod = '7d';
         let COL_MAP = {};
         let categories = [];
+        let currentUser = null;
 
         let mfData = [];
         let mfFilteredData = [];
         let mfCurrentPage = 1;
         const MF_PAGE_SIZE = 25;
 
-        // ===================== AUTH =====================
-        function getUsers() {
+        // ===================== GOOGLE AUTH =====================
+        function initGoogleAuth() {
+            const savedUser = sessionStorage.getItem('re_google_user');
+            if (savedUser) {
+                try {
+                    currentUser = JSON.parse(savedUser);
+                    if (isValidDomain(currentUser.email)) {
+                        showDashboard();
+                        return;
+                    }
+                } catch (e) {}
+            }
+            renderGoogleButton();
+        }
+
+        function isValidDomain(email) {
+            if (!email) return false;
+            const domain = email.split('@')[1];
+            return domain === ALLOWED_DOMAIN;
+        }
+
+        function renderGoogleButton() {
+            if (typeof google === 'undefined' || !google.accounts) {
+                setTimeout(renderGoogleButton, 500);
+                return;
+            }
+            google.accounts.id.initialize({
+                client_id: GOOGLE_CLIENT_ID,
+                callback: handleCredentialResponse,
+                auto_select: false,
+                cancel_on_tap_outside: true,
+                hosted_domain: ALLOWED_DOMAIN
+            });
+            google.accounts.id.renderButton(
+                document.getElementById("g_id_signin"),
+                { theme: "outline", size: "large", width: 320, text: "signin_with", shape: "rectangular", logo_alignment: "center" }
+            );
+        }
+
+        function handleCredentialResponse(response) {
+            const credential = response.credential;
+            const payload = parseJwt(credential);
+            if (!payload || !payload.email) {
+                showAuthError("Could not retrieve email from Google.");
+                return;
+            }
+            if (!isValidDomain(payload.email)) {
+                showAuthError("Only @" + ALLOWED_DOMAIN + " email addresses are allowed.");
+                google.accounts.id.disableAutoSelect();
+                return;
+            }
+            currentUser = {
+                email: payload.email,
+                name: payload.name || payload.email,
+                picture: payload.picture || '',
+                sub: payload.sub,
+                credential: credential
+            };
+            sessionStorage.setItem('re_google_user', JSON.stringify(currentUser));
+            showDashboard();
+        }
+
+        function parseJwt(token) {
             try {
-                const stored = localStorage.getItem('re_users');
-                if (stored) return JSON.parse(stored);
-            } catch (e) {}
-            return JSON.parse(JSON.stringify(DEFAULT_USERS));
-        }
-
-        function saveUsers(users) {
-            localStorage.setItem('re_users', JSON.stringify(users));
-        }
-
-        function hashPass(str) {
-            let h = 0;
-            for (let i = 0; i < str.length; i++) {
-                h = ((h << 5) - h) + str.charCodeAt(i);
-                h |= 0;
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                console.error("JWT parse error:", e);
+                return null;
             }
-            return 'h' + Math.abs(h);
         }
 
-        function checkAuth() {
-            const session = sessionStorage.getItem('re_session');
-            const remember = localStorage.getItem('re_remember');
-            if (session || remember) {
-                document.getElementById('authOverlay').style.display = 'none';
-                document.getElementById('appContent').style.display = '';
-                const user = JSON.parse(session || remember);
-                if (user.role === 'admin') {
-                    document.getElementById('adminBtn').classList.remove('hidden');
-                    document.getElementById('adminBtn').classList.add('flex');
+        function showAuthError(msg) {
+            const err = document.getElementById('authError');
+            err.textContent = msg;
+            err.style.display = 'block';
+        }
+
+        function showDashboard() {
+            document.getElementById('authOverlay').style.display = 'none';
+            document.getElementById('appContent').style.display = '';
+            if (currentUser) {
+                document.getElementById('userName').textContent = currentUser.name;
+                if (currentUser.picture) {
+                    const avatar = document.getElementById('userAvatar');
+                    avatar.src = currentUser.picture;
+                    avatar.alt = currentUser.name;
+                    avatar.classList.remove('hidden');
                 }
-                refreshAll();
-                return true;
             }
-            return false;
-        }
-
-        function doLogin() {
-            const user = document.getElementById('authUser').value.trim().toLowerCase();
-            const pass = document.getElementById('authPass').value;
-            const remember = document.getElementById('authRemember').checked;
-            const users = getUsers();
-            const found = users.find(u => u.username === user && u.password === pass);
-            if (found) {
-                const session = JSON.stringify({ username: found.username, role: found.role });
-                sessionStorage.setItem('re_session', session);
-                if (remember) localStorage.setItem('re_remember', session);
-                document.getElementById('authOverlay').style.display = 'none';
-                document.getElementById('appContent').style.display = '';
-                document.getElementById('authError').style.display = 'none';
-                if (found.role === 'admin') {
-                    document.getElementById('adminBtn').classList.remove('hidden');
-                    document.getElementById('adminBtn').classList.add('flex');
-                }
-                refreshAll();
-            } else {
-                document.getElementById('authError').style.display = 'block';
-            }
+            refreshAll();
         }
 
         function doLogout() {
-            sessionStorage.removeItem('re_session');
-            localStorage.removeItem('re_remember');
-            location.reload();
-        }
-
-        function togglePassword() {
-            const input = document.getElementById('authPass');
-            const eye = document.getElementById('eyeIcon');
-            const eyeOff = document.getElementById('eyeOffIcon');
-            if (input.type === 'password') {
-                input.type = 'text';
-                eye.style.display = 'none';
-                eyeOff.style.display = 'block';
-            } else {
-                input.type = 'password';
-                eye.style.display = 'block';
-                eyeOff.style.display = 'none';
+            if (typeof google !== 'undefined' && google.accounts) {
+                google.accounts.id.disableAutoSelect();
             }
-        }
-
-        // ===================== ADMIN =====================
-        function openAdminPanel() {
-            document.getElementById('adminModal').classList.remove('hidden');
-            renderUsersList();
-        }
-
-        function closeAdminPanel() {
-            document.getElementById('adminModal').classList.add('hidden');
-        }
-
-        function renderUsersList() {
-            const users = getUsers();
-            const container = document.getElementById('usersList');
-            container.innerHTML = users.map((u, i) => `
-                <div class="flex items-center justify-between bg-slate-50 rounded-lg px-4 py-3">
-                    <div>
-                        <span class="font-semibold text-slate-700 text-sm">${u.username}</span>
-                        <span class="text-xs text-slate-400 ml-2 uppercase tracking-wider">${u.role}</span>
-                    </div>
-                    <button onclick="removeUser(${i})" class="text-rose-500 hover:text-rose-700 text-xs font-semibold">Remove</button>
-                </div>
-            `).join('');
-        }
-
-        function addNewUser() {
-            const name = document.getElementById('newUserName').value.trim().toLowerCase();
-            const pass = document.getElementById('newUserPass').value;
-            const role = document.getElementById('newUserRole').value;
-            const err = document.getElementById('adminError');
-            if (!name || !pass) { err.textContent = 'Username and password required'; err.style.display = 'block'; return; }
-            const users = getUsers();
-            if (users.find(u => u.username === name)) { err.textContent = 'Username already exists'; err.style.display = 'block'; return; }
-            users.push({ username: name, password: pass, role: role });
-            saveUsers(users);
-            err.style.display = 'none';
-            document.getElementById('newUserName').value = '';
-            document.getElementById('newUserPass').value = '';
-            renderUsersList();
-        }
-
-        function removeUser(idx) {
-            const users = getUsers();
-            const current = JSON.parse(sessionStorage.getItem('re_session') || localStorage.getItem('re_remember') || '{}');
-            if (users[idx].username === current.username) { alert('Cannot remove yourself'); return; }
-            users.splice(idx, 1);
-            saveUsers(users);
-            renderUsersList();
+            sessionStorage.removeItem('re_google_user');
+            currentUser = null;
+            location.reload();
         }
 
         // ===================== THEME =====================
@@ -604,34 +466,18 @@
             if (str instanceof Date) return isNaN(str) ? null : str;
             str = String(str).trim();
             if (!str) return null;
-
-            // Try DD/MM/YYYY or DD-MM-YYYY
             let m = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
             if (m) {
                 const d = new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1]));
                 return isNaN(d) ? null : d;
             }
-
-            // Try MM/DD/YYYY or MM-DD-YYYY
             m = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
             if (m) {
                 const d = new Date(parseInt(m[3]), parseInt(m[1]) - 1, parseInt(m[2]));
                 if (!isNaN(d)) return d;
             }
-
-            // Try standard parse
             const d = new Date(str);
             return isNaN(d) ? null : d;
-        }
-
-        function getResolutionGap(raised, solved, isSolved) {
-            if (!raised) return '-';
-            if (isSolved && solved) {
-                const diff = Math.ceil((solved - raised) / (1000 * 60 * 60 * 24));
-                return diff + 'd';
-            }
-            const diff = Math.ceil((new Date() - raised) / (1000 * 60 * 60 * 24));
-            return diff + 'd pending';
         }
 
         function isToday(d) {
@@ -657,11 +503,6 @@
         function formatDate(d) {
             if (!d) return '-';
             return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-        }
-
-        function formatDateTime(d) {
-            if (!d) return '-';
-            return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
         }
 
         // ===================== DATA FETCH =====================
@@ -690,51 +531,16 @@
             renderDailyChart();
         }
 
-        async function loadMFData() {
-            if (!MF_CSV_URL) return;
-            const rows = await fetchCSV(MF_CSV_URL);
-            mfData = rows.map(r => {
-                const date = parseDateRobust(r['Date'] || r['date'] || r['Date Raised'] || r['Raised Date']);
-                const solved = (r['Status'] || r['status'] || '').toString().toLowerCase().includes('solved') ||
-                               (r['Status'] || r['status'] || '').toString().toLowerCase().includes('resolved') ||
-                               (r['Slove date'] || r['Solved Date'] || r['Resolved Date'] || '');
-                const urgent = (r['Status'] || r['status'] || '').toString().toLowerCase().includes('urgent');
-                const kam = r['KAM'] || r['kam'] || r['Member'] || r['member'] || r['Assignee'] || 'Rudra';
-                return {
-                    _raw: r,
-                    _date: date,
-                    _dateRaw: r['Date'] || r['date'] || r['Date Raised'] || r['Raised Date'],
-                    _solved: !!solved,
-                    _urgent: urgent,
-                    _kam: kam,
-                    _category: r['Category'] || r['category'] || r['Issue Type'] || 'General'
-                };
-            });
-            applyMFFilters();
-            renderMFSummary();
-            renderMFMemberCards();
-        }
-
         function detectColumns() {
             if (!allData.length) return;
-
-            // Union of column names across ALL rows from ALL sheets, not just the
-            // first row of the first sheet — OSD/Central/ISD don't always use
-            // identical header wording, so a field that's missing from sheet 1's
-            // headers can still be picked up if sheet 2 or 3 has it.
             const colSet = new Set();
             allData.forEach(r => Object.keys(r).forEach(k => colSet.add(k)));
             const cols = [...colSet];
-
             const norm = (s) => (s || '').toString().replace(/\s+/g, ' ').trim().toLowerCase();
 
             const findCol = (names) => {
-                // Exact match first.
                 const exact = names.find(n => cols.includes(n));
                 if (exact) return exact;
-                // Fallback: same text once whitespace/casing differences are ignored —
-                // catches things like a trailing space or a non-breaking space that
-                // made it into the sheet's header but is invisible in the Sheets UI.
                 for (const name of names) {
                     const match = cols.find(c => norm(c) === norm(name));
                     if (match) return match;
@@ -755,38 +561,22 @@
                 sheet: '_sheet'
             };
 
-            // Manual mappings saved from the Settings panel always win over
-            // auto-detection for whichever fields were explicitly set.
             let saved = {};
-            try {
-                saved = JSON.parse(localStorage.getItem('re_colmap') || '{}');
-            } catch (e) {}
+            try { saved = JSON.parse(localStorage.getItem('re_colmap') || '{}'); } catch (e) {}
             const overrides = Object.fromEntries(Object.entries(saved).filter(([k, v]) => v && cols.includes(v)));
             COL_MAP = { ...detected, ...overrides };
-
             categories = [...new Set(allData.map(r => r[COL_MAP.category || 'Issue Category'] || 'Uncategorized').filter(Boolean))];
-
-            console.log('Auto-detected columns:', detected);
-            console.log('Active column map (after manual overrides):', COL_MAP);
-            console.log('Available columns (union across all sheets):', cols);
-            console.log('Total rows before filter:', allData.length);
         }
 
         function processData() {
             allData.forEach(r => {
                 r._date = parseDateRobust(r[COL_MAP.date || 'Timestamp']);
-
-                // Solved/Pending is driven by the Ops End comments (Comments 1 / Comments 2,
-                // columns N & O in the sheet): both blank -> Pending, either filled in -> Solved.
                 const opsComment1 = (r[COL_MAP.opsComment1 || 'Comments 1 (Ops End)'] || '').toString().trim();
                 const opsComment2 = (r[COL_MAP.opsComment2 || 'Comments 2 (Ops End)'] || '').toString().trim();
                 r._solved = !!(opsComment1 || opsComment2);
-
                 const issueStatus = (r['Issue Status'] || '').toString().toLowerCase().trim();
-                r._urgent = issueStatus === 'urgent' || issueStatus.includes('urgent') ||
-                           issueStatus === 'high' || issueStatus.includes('high');
+                r._urgent = issueStatus === 'urgent' || issueStatus.includes('urgent') || issueStatus === 'high' || issueStatus.includes('high');
 
-                // Match KAM by Email Address column
                 let emailValue = (r['Email Address'] || '').toString().trim().toLowerCase();
                 let matchedMember = TEAM_MEMBERS.find(m => m.email && emailValue === m.email.toLowerCase());
 
@@ -799,14 +589,10 @@
                     r._kamKey = null;
                     r._kamMatched = false;
                 }
-
                 r._category = r['Issue Category'] || 'Uncategorized';
                 r._hub = r[COL_MAP.hub || 'Concern Hub (Copy exactly from System)'] || '-';
             });
-
-            // Filter to only team members
             allData = allData.filter(r => r._kamMatched);
-            console.log('Total rows after team filter:', allData.length);
         }
 
         // ===================== RENDER =====================
@@ -815,8 +601,7 @@
             const solved = allData.filter(r => r._solved).length;
             const ratio = total ? Math.round((solved / total) * 100) : 0;
             const urgent = allData.filter(r => r._urgent && !r._solved).length;
-            const irMails = allData.filter(r => (r._category || '').toString().toLowerCase().includes('ir') ||
-                                                (r[COL_MAP.details || ''] || '').toString().toLowerCase().includes('mail')).length;
+            const irMails = allData.filter(r => (r._category || '').toString().toLowerCase().includes('ir') || (r[COL_MAP.details || ''] || '').toString().toLowerCase().includes('mail')).length;
 
             const cards = [
                 { label: 'Total Issues', value: total, color: 'border-blue', text: 'text-blue-600' },
@@ -885,37 +670,16 @@
 
         function renderCategoryChart() {
             const counts = {};
-            allData.forEach(r => {
-                const cat = r._category || 'Uncategorized';
-                counts[cat] = (counts[cat] || 0) + 1;
-            });
+            allData.forEach(r => { const cat = r._category || 'Uncategorized'; counts[cat] = (counts[cat] || 0) + 1; });
             const labels = Object.keys(counts);
             const data = Object.values(counts);
             const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#f43f5e', '#06b6d4', '#ec4899', '#64748b'];
-
             const ctx = document.getElementById('categoryChart').getContext('2d');
             if (categoryChart) categoryChart.destroy();
             categoryChart = new Chart(ctx, {
                 type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Issues',
-                        data: data,
-                        backgroundColor: colors,
-                        borderRadius: 8,
-                        barThickness: 32
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 11 }, color: '#94a3b8' } },
-                        x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#64748b' } }
-                    }
-                }
+                data: { labels: labels, datasets: [{ label: 'Issues', data: data, backgroundColor: colors, borderRadius: 8, barThickness: 32 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 11 }, color: '#94a3b8' } }, x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#64748b' } } } }
             });
         }
 
@@ -933,25 +697,8 @@
                 if (dailyChart) dailyChart.destroy();
                 dailyChart = new Chart(ctx, {
                     type: 'bar',
-                    data: {
-                        labels: labelsM,
-                        datasets: [{
-                            label: 'Issues',
-                            data: dataM,
-                            backgroundColor: TEAM_MEMBERS.map(m => m.color),
-                            borderRadius: 8,
-                            barThickness: 40
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 11 }, color: '#94a3b8' } },
-                            x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#64748b' } }
-                        }
-                    }
+                    data: { labels: labelsM, datasets: [{ label: 'Issues', data: dataM, backgroundColor: TEAM_MEMBERS.map(m => m.color), borderRadius: 8, barThickness: 40 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 11 }, color: '#94a3b8' } }, x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#64748b' } } } }
                 });
                 return;
             }
@@ -976,30 +723,8 @@
             if (dailyChart) dailyChart.destroy();
             dailyChart = new Chart(ctx, {
                 type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Issues',
-                        data: data,
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59,130,246,0.08)',
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 4,
-                        pointBackgroundColor: '#3b82f6',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 11 }, color: '#94a3b8' } },
-                        x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#64748b', maxRotation: 45 } }
-                    }
-                }
+                data: { labels: labels, datasets: [{ label: 'Issues', data: data, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.08)', fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#3b82f6', pointBorderColor: '#fff', pointBorderWidth: 2 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 11 }, color: '#94a3b8' } }, x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#64748b', maxRotation: 45 } } } }
             });
         }
 
@@ -1014,15 +739,9 @@
         function populateFilters() {
             const catSelect = document.getElementById('categoryFilter');
             catSelect.innerHTML = '<option value="all">All categories</option>' + categories.map(c => `<option value="${c}">${c}</option>`).join('');
-
             const kamSelect = document.getElementById('kamFilter');
             const kams = [...new Set(allData.map(r => r._kam).filter(Boolean))];
             kamSelect.innerHTML = '<option value="all">All Members</option>' + kams.map(k => `<option value="${k}">${k}</option>`).join('');
-
-            const mfKamSelect = document.getElementById('mfKAMFilter');
-            if (mfKamSelect) {
-                mfKamSelect.innerHTML = '<option value="all">All members</option>' + TEAM_MEMBERS.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
-            }
         }
 
         function initFilterPills() {
@@ -1034,22 +753,13 @@
         function setFilterPill(filter, btn) {
             document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            if (filter === 'All') {
-                document.getElementById('dateFilter').value = 'all';
-                document.getElementById('searchInput').value = '';
-            } else if (filter === 'Today') {
-                document.getElementById('dateFilter').value = 'today';
-            } else if (filter === 'This Week') {
-                document.getElementById('dateFilter').value = 'week';
-            } else if (filter === 'This Month') {
-                document.getElementById('dateFilter').value = 'month';
-            } else if (filter === 'Solved') {
-                document.getElementById('searchInput').value = 'status:solved';
-            } else if (filter === 'Pending') {
-                document.getElementById('searchInput').value = 'status:pending';
-            } else if (filter === 'Urgent') {
-                document.getElementById('searchInput').value = 'status:urgent';
-            }
+            if (filter === 'All') { document.getElementById('dateFilter').value = 'all'; document.getElementById('searchInput').value = ''; }
+            else if (filter === 'Today') { document.getElementById('dateFilter').value = 'today'; }
+            else if (filter === 'This Week') { document.getElementById('dateFilter').value = 'week'; }
+            else if (filter === 'This Month') { document.getElementById('dateFilter').value = 'month'; }
+            else if (filter === 'Solved') { document.getElementById('searchInput').value = 'status:solved'; }
+            else if (filter === 'Pending') { document.getElementById('searchInput').value = 'status:pending'; }
+            else if (filter === 'Urgent') { document.getElementById('searchInput').value = 'status:urgent'; }
             applyFilters();
         }
 
@@ -1097,16 +807,7 @@
                 return;
             }
 
-            thead.innerHTML = `
-                <th>#</th>
-                <th>Date</th>
-                <th>Consignment</th>
-                <th>Category</th>
-                <th>Details</th>
-                <th>KAM</th>
-                <th>Status</th>
-                <th>Hub</th>
-            `;
+            thead.innerHTML = `<th>#</th><th>Date</th><th>Consignment</th><th>Category</th><th>Details</th><th>KAM</th><th>Status</th><th>Hub</th>`;
 
             const start = (currentPage - 1) * PAGE_SIZE;
             const end = Math.min(start + PAGE_SIZE, filteredData.length);
@@ -1209,16 +910,7 @@
         async function refreshAll() {
             const btn = document.getElementById('refreshBtn');
             btn.innerHTML = '<svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Refreshing...';
-            try {
-                await loadAllData();
-            } catch (e) {
-                console.error('loadAllData failed:', e);
-            }
-            try {
-                await loadMFData();
-            } catch (e) {
-                console.error('loadMFData failed:', e);
-            }
+            try { await loadAllData(); } catch (e) { console.error('loadAllData failed:', e); }
             document.getElementById('lastUpdate').textContent = 'Updated: ' + new Date().toLocaleTimeString();
             btn.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Refresh';
         }
@@ -1226,9 +918,7 @@
         // ===================== INIT =====================
         initTheme();
         initFilterPills();
-        if (!checkAuth()) {
-            document.getElementById('authUser').focus();
-        }
+        initGoogleAuth();
     </script>
 </body>
 </html>
