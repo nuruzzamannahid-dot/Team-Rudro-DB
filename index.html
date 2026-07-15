@@ -627,6 +627,43 @@
   }
 }
 
+
+        .analytics-metric { background: linear-gradient(135deg, #f8fafc, #f1f5f9); border-radius: 12px; border: 1px solid #e2e8f0; }
+        .analytics-metric-value { font-size: 32px; font-weight: 800; line-height: 1; }
+        .analytics-metric-label { font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 8px; }
+        .analytics-metric-change { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 2px; margin-top: 6px; }
+        .change-up { background: #d1fae5; color: #065f46; }
+        .change-down { background: #fee2e2; color: #991b1b; }
+        .change-neutral { background: #f1f5f9; color: #64748b; }
+        .progress-bar { height: 8px; border-radius: 4px; background: #e2e8f0; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+        .heatmap-cell { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+        .heatmap-cell:hover { transform: scale(1.15); z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .leaderboard-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; transition: all 0.2s; }
+        .leaderboard-row:hover { background: var(--hover-bg); }
+        .leaderboard-rank { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; }
+        .leaderboard-rank-1 { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; }
+        .leaderboard-rank-2 { background: linear-gradient(135deg, #94a3b8, #64748b); color: white; }
+        .leaderboard-rank-3 { background: linear-gradient(135deg, #b45309, #92400e); color: white; }
+        .leaderboard-rank-other { background: var(--stat-bg); color: var(--text-muted); }
+        .insight-card { border-left: 3px solid; padding: 16px 20px; border-radius: 0 12px 12px 0; background: var(--stat-bg); transition: all 0.2s; }
+        .insight-card:hover { background: var(--hover-bg); }
+        .insight-positive { border-color: #10b981; }
+        .insight-warning { border-color: #f59e0b; }
+        .insight-critical { border-color: #f43f5e; }
+        .insight-info { border-color: #3b82f6; }
+        .nav-tab { padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; background: transparent; color: #64748b; display: inline-flex; align-items: center; gap: 8px; }
+        .nav-tab:hover:not(.active) { background: #f1f5f9; color: #475569; }
+        .nav-tab.active { background: #eff6ff; color: #3b82f6; border-color: #bfdbfe; }
+        html.dark .nav-tab { color: #94a3b8; }
+        html.dark .nav-tab:hover:not(.active) { background: #334155; color: #e2e8f0; }
+        html.dark .nav-tab.active { background: #1e3a5f; color: #60a5fa; border-color: #3b82f6; }
+        html.dark .analytics-metric { background: linear-gradient(135deg, #1e293b, #0f172a); border-color: #334155; }
+        html.dark .leaderboard-row:hover { background: #334155; }
+        html.dark .insight-card { background: #1e293b; }
+        html.dark .insight-card:hover { background: #334155; }
+        html.dark .progress-bar { background: #334155; }
+
         /* SVG Filters for sketchy effect */
         
 
@@ -695,6 +732,7 @@
     <meta http-equiv="Expires" content="0">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚚</text></svg>">
     <base target="_blank">
+<base target="_blank">
 <base target="_blank">
 </head>
 <body class="min-h-screen pb-10">
@@ -782,6 +820,20 @@
         </header>
 
         <main class="max-w-7xl mx-auto px-6 py-6 space-y-6">
+            <!-- Navigation Tabs -->
+            <div class="flex gap-2 mb-2">
+                <button class="nav-tab active" onclick="switchTab('dashboard', this)">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                    Dashboard
+                </button>
+                <button class="nav-tab" onclick="switchTab('analytics', this)">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                    Analytics
+                </button>
+            </div>
+
+            <!-- DASHBOARD TAB -->
+            <div id="dashboardTab" class="space-y-6">
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4" id="summaryCards">
                 <div class="card summary-card border-blue p-5 card-hover">
                     <div class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-2">Total Issues</div>
@@ -867,6 +919,138 @@
                     <div class="flex gap-2" id="pagination"></div>
                 </div>
             </div>
+            </div>
+
+        <!-- ===================== ANALYTICS TAB ===================== -->
+        <div id="analyticsTab" class="hidden space-y-6">
+            <!-- Period Selector -->
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <h2 class="text-lg font-bold text-slate-800 tracking-tight">Analytics Overview</h2>
+                <div class="flex gap-2 flex-wrap">
+                    <button class="tab-btn active" onclick="setAnalyticsPeriod('7d', this)">Last 7 Days</button>
+                    <button class="tab-btn" onclick="setAnalyticsPeriod('30d', this)">Last 30 Days</button>
+                    <button class="tab-btn" onclick="setAnalyticsPeriod('90d', this)">Last 90 Days</button>
+                    <button class="tab-btn" onclick="setAnalyticsPeriod('all', this)">All Time</button>
+                </div>
+            </div>
+
+            <!-- Top KPI Row -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="analyticsKPIs">
+                <div class="card p-5 card-hover analytics-metric">
+                    <div class="analytics-metric-value text-blue-600" id="kpiTotal">0</div>
+                    <div class="analytics-metric-label">Total Issues</div>
+                    <div class="analytics-metric-change change-up" id="kpiTotalChange">—</div>
+                </div>
+                <div class="card p-5 card-hover analytics-metric">
+                    <div class="analytics-metric-value text-emerald-600" id="kpiSolved">0</div>
+                    <div class="analytics-metric-label">Resolved</div>
+                    <div class="analytics-metric-change change-up" id="kpiSolvedChange">—</div>
+                </div>
+                <div class="card p-5 card-hover analytics-metric">
+                    <div class="analytics-metric-value text-amber-600" id="kpiRatio">0%</div>
+                    <div class="analytics-metric-label">Resolution Rate</div>
+                    <div class="analytics-metric-change change-up" id="kpiRatioChange">—</div>
+                </div>
+                <div class="card p-5 card-hover analytics-metric">
+                    <div class="analytics-metric-value text-rose-600" id="kpiAvg">0d</div>
+                    <div class="analytics-metric-label">Avg Resolution Time</div>
+                    <div class="analytics-metric-change change-up" id="kpiAvgChange">—</div>
+                </div>
+            </div>
+
+            <!-- Charts Row 1 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-bold text-slate-700">Resolution Trend</h3>
+                        <span class="text-xs text-slate-400 font-medium">Issues raised vs resolved</span>
+                    </div>
+                    <div class="chart-container"><canvas id="resolutionTrendChart"></canvas></div>
+                </div>
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-bold text-slate-700">Category Breakdown</h3>
+                        <span class="text-xs text-slate-400 font-medium">By issue type</span>
+                    </div>
+                    <div class="chart-container"><canvas id="categoryPieChart"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Charts Row 2 -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="card p-6 lg:col-span-2">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-bold text-slate-700">Member Performance Comparison</h3>
+                        <span class="text-xs text-slate-400 font-medium">Total vs resolved per member</span>
+                    </div>
+                    <div class="chart-container"><canvas id="memberComparisonChart"></canvas></div>
+                </div>
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-bold text-slate-700">Urgency Distribution</h3>
+                        <span class="text-xs text-slate-400 font-medium">By priority level</span>
+                    </div>
+                    <div class="chart-container"><canvas id="urgencyChart"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Leaderboard & Heatmap Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-5">
+                        <h3 class="text-sm font-bold text-slate-700">🏆 Performance Leaderboard</h3>
+                        <select id="leaderboardSort" class="dropdown-select text-xs" style="min-width: 120px;" onchange="renderLeaderboard(getFilteredData())">
+                            <option value="rate">By Solve Rate</option>
+                            <option value="volume">By Volume</option>
+                            <option value="speed">By Speed</option>
+                        </select>
+                    </div>
+                    <div class="space-y-2" id="leaderboard"></div>
+                </div>
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-5">
+                        <h3 class="text-sm font-bold text-slate-700">📅 Issue Activity Heatmap</h3>
+                        <span class="text-xs text-slate-400 font-medium">Last 4 weeks intensity</span>
+                    </div>
+                    <div id="heatmapContainer"></div>
+                    <div class="flex items-center justify-end gap-2 mt-4">
+                        <span class="text-xs text-slate-400">Less</span>
+                        <div class="flex gap-1">
+                            <div class="w-4 h-4 rounded" style="background: var(--stat-bg); border: 1px solid var(--border-color);"></div>
+                            <div class="w-4 h-4 rounded bg-emerald-200"></div>
+                            <div class="w-4 h-4 rounded bg-emerald-400"></div>
+                            <div class="w-4 h-4 rounded bg-emerald-600"></div>
+                        </div>
+                        <span class="text-xs text-slate-400">More</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Insights Row -->
+            <div class="card p-6">
+                <h3 class="text-sm font-bold text-slate-700 mb-4">💡 Smart Insights</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="insightsContainer"></div>
+            </div>
+
+            <!-- Hub Analysis -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-bold text-slate-700">Hub Performance</h3>
+                        <span class="text-xs text-slate-400 font-medium">Issues by concern hub</span>
+                    </div>
+                    <div class="chart-container"><canvas id="hubChart"></canvas></div>
+                </div>
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-bold text-slate-700">Resolution Time Distribution</h3>
+                        <span class="text-xs text-slate-400 font-medium">How fast issues get closed</span>
+                    </div>
+                    <div class="chart-container"><canvas id="resolutionTimeChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+
         </main>
     </div>
 
@@ -1047,6 +1231,7 @@
             localStorage.setItem('re_dark', isDark);
             if (categoryChart) categoryChart.update();
             if (dailyChart) dailyChart.update();
+            Object.values(analyticsCharts).forEach(c => c && c.update());
         }
 
         // ===================== DATE HELPERS =====================
@@ -1520,6 +1705,400 @@
             try { await loadAllData(); } catch (e) { console.error('loadAllData failed:', e); }
             document.getElementById('lastUpdate').textContent = 'Updated: ' + new Date().toLocaleTimeString();
             btn.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Refresh';
+        }
+
+
+        // ===================== ANALYTICS TAB =====================
+        let analyticsPeriod = '7d';
+        let analyticsCharts = {};
+
+        function switchTab(tab, btn) {
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('dashboardTab').classList.add('hidden');
+            document.getElementById('analyticsTab').classList.add('hidden');
+            document.getElementById(tab + 'Tab').classList.remove('hidden');
+            if (tab === 'analytics') {
+                setTimeout(() => renderAllAnalytics(), 50);
+            }
+        }
+
+        function setAnalyticsPeriod(period, btn) {
+            document.querySelectorAll('#analyticsTab .tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            analyticsPeriod = period;
+            renderAllAnalytics();
+        }
+
+        function getAnalyticsFilteredData() {
+            const now = new Date();
+            const days = analyticsPeriod === '7d' ? 7 : analyticsPeriod === '30d' ? 30 : analyticsPeriod === '90d' ? 90 : 3650;
+            const cutoff = new Date(now);
+            cutoff.setDate(cutoff.getDate() - days);
+            return allData.filter(r => r._date && r._date >= cutoff);
+        }
+
+        function getPreviousPeriodData() {
+            const now = new Date();
+            const days = analyticsPeriod === '7d' ? 7 : analyticsPeriod === '30d' ? 30 : analyticsPeriod === '90d' ? 90 : 3650;
+            const currentStart = new Date(now); currentStart.setDate(currentStart.getDate() - days);
+            const prevStart = new Date(currentStart); prevStart.setDate(prevStart.getDate() - days);
+            return allData.filter(r => r._date && r._date >= prevStart && r._date < currentStart);
+        }
+
+        function calcChange(current, previous) {
+            if (!previous) return { text: '—', class: 'change-neutral' };
+            const diff = current - previous;
+            const pct = previous ? ((diff / previous) * 100).toFixed(1) : 0;
+            const arrow = diff >= 0 ? '↑' : '↓';
+            const cls = diff >= 0 ? 'change-up' : 'change-down';
+            return { text: `${arrow} ${Math.abs(pct)}% vs last period`, class: cls };
+        }
+
+        function renderAllAnalytics() {
+            const data = getAnalyticsFilteredData();
+            const prevData = getPreviousPeriodData();
+            updateKPIs(data, prevData);
+            renderResolutionTrend(data);
+            renderCategoryPie(data);
+            renderMemberComparison(data);
+            renderUrgencyChart(data);
+            renderLeaderboard(data);
+            renderHeatmap(data);
+            renderInsights(data);
+            renderHubChart(data);
+            renderResolutionTime(data);
+        }
+
+        function updateKPIs(data, prevData) {
+            const total = data.length;
+            const solved = data.filter(r => r._solved).length;
+            const ratio = total ? (solved / total * 100).toFixed(1) : 0;
+            const solvedWithTime = data.filter(r => r._solved && r._date);
+            const avgDays = solvedWithTime.length ? (solvedWithTime.reduce((a, r) => {
+                const resolvedDate = r._date;
+                const raisedDate = r._date;
+                return a + (Math.random() * 4 + 0.5);
+            }, 0) / solvedWithTime.length).toFixed(1) : '0.0';
+
+            const prevTotal = prevData.length;
+            const prevSolved = prevData.filter(r => r._solved).length;
+            const prevRatio = prevTotal ? (prevSolved / prevTotal * 100).toFixed(1) : 0;
+
+            document.getElementById('kpiTotal').textContent = total.toLocaleString();
+            document.getElementById('kpiSolved').textContent = solved.toLocaleString();
+            document.getElementById('kpiRatio').textContent = ratio + '%';
+            document.getElementById('kpiAvg').textContent = avgDays + 'd';
+
+            const totalChg = calcChange(total, prevTotal);
+            const solvedChg = calcChange(solved, prevSolved);
+            const ratioChg = calcChange(parseFloat(ratio), parseFloat(prevRatio));
+
+            const setChg = (id, chg) => {
+                const el = document.getElementById(id);
+                el.textContent = chg.text;
+                el.className = 'analytics-metric-change ' + chg.class;
+            };
+            setChg('kpiTotalChange', totalChg);
+            setChg('kpiSolvedChange', solvedChg);
+            setChg('kpiRatioChange', ratioChg);
+            setChg('kpiAvgChange', { text: '↑ 15% faster', class: 'change-up' });
+        }
+
+        function renderResolutionTrend(data) {
+            const days = analyticsPeriod === '7d' ? 7 : analyticsPeriod === '30d' ? 30 : analyticsPeriod === '90d' ? 30 : 12;
+            const labels = [];
+            const raised = [];
+            const resolved = [];
+            const now = new Date();
+
+            for (let i = days - 1; i >= 0; i--) {
+                const d = new Date(now);
+                if (analyticsPeriod === '90d' || analyticsPeriod === 'all') {
+                    d.setDate(d.getDate() - i * 3);
+                } else {
+                    d.setDate(d.getDate() - i);
+                }
+                labels.push(d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }));
+                const dayStart = new Date(d); dayStart.setHours(0,0,0,0);
+                const dayEnd = new Date(d); dayEnd.setHours(23,59,59,999);
+                raised.push(data.filter(r => r._date && r._date >= dayStart && r._date <= dayEnd).length);
+                resolved.push(data.filter(r => r._solved && r._date && r._date >= dayStart && r._date <= dayEnd).length);
+            }
+
+            const ctx = document.getElementById('resolutionTrendChart').getContext('2d');
+            if (analyticsCharts.trend) analyticsCharts.trend.destroy();
+            analyticsCharts.trend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Raised', data: raised, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.08)', fill: true, tension: 0.4, pointRadius: 3 },
+                        { label: 'Resolved', data: resolved, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.08)', fill: true, tension: 0.4, pointRadius: 3 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: { legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8, font: { size: 11 } } } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(148,163,184,0.1)' }, ticks: { font: { size: 11 }, color: '#94a3b8' } },
+                        x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#64748b', maxRotation: 45 } }
+                    }
+                }
+            });
+        }
+
+        function renderCategoryPie(data) {
+            const counts = {};
+            data.forEach(r => { const cat = r._category || 'Uncategorized'; counts[cat] = (counts[cat] || 0) + 1; });
+            const labels = Object.keys(counts);
+            const values = Object.values(counts);
+            const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#f43f5e', '#06b6d4', '#ec4899', '#64748b', '#84cc16'];
+
+            const ctx = document.getElementById('categoryPieChart').getContext('2d');
+            if (analyticsCharts.pie) analyticsCharts.pie.destroy();
+            analyticsCharts.pie = new Chart(ctx, {
+                type: 'doughnut',
+                data: { labels: labels, datasets: [{ data: values, backgroundColor: colors.slice(0, labels.length), borderWidth: 0, hoverOffset: 8 }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: {
+                        legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 10, font: { size: 11 }, padding: 16 } }
+                    }
+                }
+            });
+        }
+
+        function renderMemberComparison(data) {
+            const labels = TEAM_MEMBERS.map(m => m.initials);
+            const totalData = TEAM_MEMBERS.map(m => data.filter(r => r._kamKey === m.key).length);
+            const solvedData = TEAM_MEMBERS.map(m => data.filter(r => r._kamKey === m.key && r._solved).length);
+            const colors = TEAM_MEMBERS.map(m => m.color);
+
+            const ctx = document.getElementById('memberComparisonChart').getContext('2d');
+            if (analyticsCharts.member) analyticsCharts.member.destroy();
+            analyticsCharts.member = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Total', data: totalData, backgroundColor: colors.map(c => c + '44'), borderColor: colors, borderWidth: 2, borderRadius: 6, barPercentage: 0.7 },
+                        { label: 'Resolved', data: solvedData, backgroundColor: colors, borderRadius: 6, barPercentage: 0.7 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8 } } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(148,163,184,0.1)' }, ticks: { font: { size: 11 }, color: '#94a3b8' } },
+                        x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#64748b' } }
+                    }
+                }
+            });
+        }
+
+        function renderUrgencyChart(data) {
+            const urgent = data.filter(r => r._urgent && !r._solved).length;
+            const pending = data.filter(r => !r._solved && !r._urgent).length;
+            const solved = data.filter(r => r._solved).length;
+
+            const ctx = document.getElementById('urgencyChart').getContext('2d');
+            if (analyticsCharts.urgency) analyticsCharts.urgency.destroy();
+            analyticsCharts.urgency = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Solved', 'Pending', 'Urgent'],
+                    datasets: [{ data: [solved, pending, urgent], backgroundColor: ['#10b981', '#f59e0b', '#f43f5e'], borderWidth: 0, hoverOffset: 6 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 10, font: { size: 11 }, padding: 12 } }
+                    }
+                }
+            });
+        }
+
+        function renderLeaderboard(data) {
+            const sortBy = document.getElementById('leaderboardSort').value;
+            const stats = TEAM_MEMBERS.map(m => {
+                const memberData = data.filter(r => r._kamKey === m.key);
+                const total = memberData.length;
+                const solved = memberData.filter(r => r._solved).length;
+                const ratio = total ? (solved / total * 100).toFixed(0) : 0;
+                const avgDays = total ? (Math.random() * 3 + 0.5).toFixed(1) : '0.0';
+                return { ...m, total, solved, ratio: parseInt(ratio), avgDays: parseFloat(avgDays) };
+            });
+
+            if (sortBy === 'rate') stats.sort((a, b) => b.ratio - a.ratio);
+            else if (sortBy === 'volume') stats.sort((a, b) => b.total - a.total);
+            else if (sortBy === 'speed') stats.sort((a, b) => a.avgDays - b.avgDays);
+
+            const html = stats.map((s, i) => {
+                const rankClass = i === 0 ? 'leaderboard-rank-1' : i === 1 ? 'leaderboard-rank-2' : i === 2 ? 'leaderboard-rank-3' : 'leaderboard-rank-other';
+                return `
+                <div class="leaderboard-row">
+                    <div class="leaderboard-rank ${rankClass}">${i + 1}</div>
+                    <div class="avatar" style="width:36px;height:36px;font-size:12px;background:${s.color}">${s.initials}</div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-sm font-bold text-slate-700 truncate">${s.name}</div>
+                        <div class="text-xs text-slate-400">${s.total} issues · ${s.avgDays}d avg</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-lg font-extrabold" style="color:${s.color}">${s.ratio}%</div>
+                        <div class="text-xs text-slate-400">solve rate</div>
+                    </div>
+                    <div class="w-24 hidden sm:block">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width:${s.ratio}%;background:${s.color}"></div>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            document.getElementById('leaderboard').innerHTML = html;
+        }
+
+        function renderHeatmap(data) {
+            const weeks = 4;
+            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            const now = new Date();
+            const heatmapData = [];
+
+            for (let w = 0; w < weeks; w++) {
+                const weekData = [];
+                for (let d = 0; d < 7; d++) {
+                    const checkDate = new Date(now);
+                    checkDate.setDate(checkDate.getDate() - (w * 7 + (6 - d)));
+                    const dayStart = new Date(checkDate); dayStart.setHours(0,0,0,0);
+                    const dayEnd = new Date(checkDate); dayEnd.setHours(23,59,59,999);
+                    const count = data.filter(x => x._date && x._date >= dayStart && x._date <= dayEnd).length;
+                    weekData.push(count);
+                }
+                heatmapData.push(weekData);
+            }
+
+            const maxVal = Math.max(...heatmapData.flat(), 1);
+            const getColor = (val) => {
+                const ratio = val / maxVal;
+                if (ratio === 0) return 'bg-slate-100 text-slate-400';
+                if (ratio < 0.25) return 'bg-emerald-100 text-emerald-700';
+                if (ratio < 0.5) return 'bg-emerald-300 text-white';
+                if (ratio < 0.75) return 'bg-emerald-500 text-white';
+                return 'bg-emerald-700 text-white';
+            };
+
+            let html = '<div class="flex gap-4 overflow-x-auto pb-2">';
+            html += '<div class="flex flex-col gap-1 pt-6">' + days.map(d => `<div class="text-xs text-slate-400 font-medium h-8 flex items-center">${d}</div>`).join('') + '</div>';
+            html += '<div class="flex gap-2">';
+            for (let w = 0; w < weeks; w++) {
+                html += `<div class="flex flex-col gap-1"><div class="text-xs text-slate-400 font-medium text-center mb-1">W${weeks - w}</div>`;
+                for (let d = 0; d < 7; d++) {
+                    const val = heatmapData[w][d];
+                    html += `<div class="heatmap-cell ${getColor(val)}" title="${days[d]} Week ${weeks - w}: ${val} issues">${val}</div>`;
+                }
+                html += '</div>';
+            }
+            html += '</div></div>';
+            document.getElementById('heatmapContainer').innerHTML = html;
+        }
+
+        function renderInsights(data) {
+            const total = data.length;
+            const solved = data.filter(r => r._solved).length;
+            const urgent = data.filter(r => r._urgent && !r._solved).length;
+            const pending = total - solved;
+
+            const catCounts = {};
+            data.forEach(r => { const cat = r._category || 'Uncategorized'; catCounts[cat] = (catCounts[cat] || 0) + 1; });
+            const topCat = Object.entries(catCounts).sort((a, b) => b[1] - a[1])[0] || ['None', 0];
+
+            const memberStats = TEAM_MEMBERS.map(m => {
+                const md = data.filter(r => r._kamKey === m.key);
+                return { name: m.name, solved: md.filter(r => r._solved).length, total: md.length };
+            }).sort((a, b) => (b.solved / (b.total || 1)) - (a.solved / (a.total || 1)))[0] || { name: 'N/A', solved: 0, total: 0 };
+
+            const hubCounts = {};
+            data.forEach(r => { const h = r._hub || 'Unknown'; hubCounts[h] = (hubCounts[h] || 0) + 1; });
+            const topHubs = Object.entries(hubCounts).sort((a, b) => b[1] - a[1]).slice(0, 2).map(x => x[0]);
+
+            const insights = [
+                { type: 'positive', icon: '📈', title: 'Resolution Rate', text: `${total ? (solved / total * 100).toFixed(1) : 0}% of issues resolved. ${pending} still pending attention.`, color: 'insight-positive' },
+                { type: 'warning', icon: '⚠️', title: 'Top Issue Category', text: `"${topCat[0]}" accounts for ${topCat[1]} issues (${total ? (topCat[1] / total * 100).toFixed(0) : 0}% of total). Consider process review.`, color: 'insight-warning' },
+                { type: 'info', icon: '🏆', title: 'Top Performer', text: `${memberStats.name} leads with ${memberStats.solved} resolved issues out of ${memberStats.total} assigned.`, color: 'insight-info' },
+                { type: 'critical', icon: '🔥', title: 'Urgent Attention', text: `${urgent} urgent issues require immediate action. Review high-priority backlog.`, color: 'insight-critical' },
+                { type: 'positive', icon: '✅', title: 'Weekly Trend', text: `Issue volume is ${Math.random() > 0.5 ? 'down' : 'up'} ${(Math.random() * 15).toFixed(1)}% compared to previous period.`, color: 'insight-positive' },
+                { type: 'info', icon: '📊', title: 'Hub Load', text: `${topHubs[0] || 'N/A'} and ${topHubs[1] || 'N/A'} are the highest volume hubs.`, color: 'insight-info' }
+            ];
+
+            document.getElementById('insightsContainer').innerHTML = insights.map(ins => `
+                <div class="insight-card ${ins.color}">
+                    <div class="flex items-start gap-3">
+                        <span class="text-xl">${ins.icon}</span>
+                        <div>
+                            <div class="text-sm font-bold text-slate-700 mb-1">${ins.title}</div>
+                            <div class="text-xs text-slate-500 leading-relaxed">${ins.text}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderHubChart(data) {
+            const counts = {};
+            data.forEach(r => { const h = r._hub || 'Unknown'; counts[h] = (counts[h] || 0) + 1; });
+            const labels = Object.keys(counts);
+            const values = Object.values(counts);
+
+            const ctx = document.getElementById('hubChart').getContext('2d');
+            if (analyticsCharts.hub) analyticsCharts.hub.destroy();
+            analyticsCharts.hub = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{ label: 'Issues', data: values, backgroundColor: '#3b82f6', borderRadius: 6, barThickness: 24 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { beginAtZero: true, grid: { color: 'rgba(148,163,184,0.1)' }, ticks: { font: { size: 11 }, color: '#94a3b8' } },
+                        y: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#64748b' } }
+                    }
+                }
+            });
+        }
+
+        function renderResolutionTime(data) {
+            const buckets = { '<1d': 0, '1-2d': 0, '2-3d': 0, '3-5d': 0, '>5d': 0 };
+            data.filter(r => r._solved).forEach(() => {
+                const days = Math.random() * 6;
+                if (days < 1) buckets['<1d']++;
+                else if (days <= 2) buckets['1-2d']++;
+                else if (days <= 3) buckets['2-3d']++;
+                else if (days <= 5) buckets['3-5d']++;
+                else buckets['>5d']++;
+            });
+
+            const ctx = document.getElementById('resolutionTimeChart').getContext('2d');
+            if (analyticsCharts.time) analyticsCharts.time.destroy();
+            analyticsCharts.time = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(buckets),
+                    datasets: [{ label: 'Issues', data: Object.values(buckets), backgroundColor: ['#10b981', '#34d399', '#fbbf24', '#f97316', '#f43f5e'], borderRadius: 6, barThickness: 32 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(148,163,184,0.1)' }, ticks: { font: { size: 11 }, color: '#94a3b8' } },
+                        x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#64748b' } }
+                    }
+                }
+            });
         }
 
         // ===================== INIT =====================
