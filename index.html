@@ -1094,6 +1094,14 @@
             return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
         }
 
+        function escapeHtml(s) {
+            return (s || '').toString()
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
         // ===================== DATA FETCH =====================
         async function fetchCSV(url) {
             try {
@@ -1163,6 +1171,8 @@
                 const opsComment1 = (r[COL_MAP.opsComment1 || 'Comments 1 (Ops End)'] || '').toString().trim();
                 const opsComment2 = (r[COL_MAP.opsComment2 || 'Comments 2 (Ops End)'] || '').toString().trim();
                 r._solved = !!(opsComment1 || opsComment2);
+                r._opsComment1 = opsComment1;
+                r._opsComment2 = opsComment2;
                 const issueStatus = (r['Issue Status'] || '').toString().toLowerCase().trim();
                 r._urgent = issueStatus === 'urgent' || issueStatus.includes('urgent') || issueStatus === 'high' || issueStatus.includes('high');
 
@@ -1396,7 +1406,7 @@
                 return;
             }
 
-            thead.innerHTML = `<th>#</th><th>Date</th><th>Consignment</th><th>Category</th><th>Details</th><th>KAM</th><th>Status</th><th>Hub</th>`;
+            thead.innerHTML = `<th>#</th><th>Date</th><th>Consignment</th><th>Category</th><th>Details</th><th>KAM</th><th>Status</th><th>Hub</th><th>OPS Comment</th>`;
 
             const start = (currentPage - 1) * PAGE_SIZE;
             const end = Math.min(start + PAGE_SIZE, filteredData.length);
@@ -1410,6 +1420,13 @@
                 const kamClass = member ? 'kam-tag-' + member.key : 'kam-tag-rudra';
                 const kamInitials = member ? member.initials : '??';
 
+                const opsCommentParts = [];
+                if (r._opsComment1) opsCommentParts.push(escapeHtml(r._opsComment1));
+                if (r._opsComment2) opsCommentParts.push(escapeHtml(r._opsComment2));
+                const opsCommentHTML = opsCommentParts.length
+                    ? opsCommentParts.map(c => `<div class="mb-1 last:mb-0">${c}</div>`).join('')
+                    : '<span class="text-slate-300">-</span>';
+
                 return `<tr>
                     <td><span class="text-xs text-slate-400">${start + i + 1}</span></td>
                     <td><span class="text-xs text-slate-600">${formatDate(r._date)}</span></td>
@@ -1419,6 +1436,7 @@
                     <td><span class="kam-tag ${kamClass}"><span style="width:18px;height:18px;border-radius:50%;background:${member ? member.color : '#3b82f6'};color:white;font-size:9px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;">${kamInitials}</span>${r._kam}</span></td>
                     <td>${status}</td>
                     <td><span class="text-xs text-slate-500">${r._hub || '-'}</span></td>
+                    <td><div class="text-xs text-slate-700 max-w-xs">${opsCommentHTML}</div></td>
                 </tr>`;
             }).join('');
 
